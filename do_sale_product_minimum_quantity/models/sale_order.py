@@ -13,5 +13,5 @@ class SaleOrder(models.Model):
             if record.order_line:
                 for line in record.order_line:
                     minimum_order_qty = line.product_id.minimum_quantity
-                    if line.product_uom_qty < minimum_order_qty:
-                        raise ValidationError(_('Minimum order quantity of the product ' + line.name + ' is ' + str(minimum_order_qty)))
+                    if line.product_uom_qty != minimum_order_qty:
+                        raise ValidationError(_('Este producto/servicio ' + line.name + ' solamente puede venderse en ' + str(minimum_order_qty) + ' unidades.'))
