@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="sale_order_report_cdd_task">
+            <t t-call="web.html_container">
+                <div class="header" style="report_header_style">
+                    <div class="row">
+                        <div class="col-3">
+                            <img t-if="res_company.logo" t-att-src="image_data_uri(res_company.logo)" style="max-height: 45px;" alt="Logo"/>
+                        </div>
+                        <div class = "col-6">
+                            <h3 style = "text-align:center;">Reporte Diario de Operaciones</h3>
+                        </div>
+                        <div class = "col-2" style = "border: 1px solid black !important ; border-radius: 10px; padding-top: 8px; margin-left: 77px;">
+                            Folio :
+                        </div>
+                    </div>
+                    
+                </div>
+                <div t-attf-class="article">
+                    <table class = "table" style = "width:100%">
+<!--                         <tr>
+                            <td></td>
+                            <td width = "10%"></td>
+                            <td></td>
+                            <td width = "40%" colspam = "2"> </td>
+                            <td width = "40%" colspam = "2"> </td>
+                            
+                        </tr> -->
+                        <tr>
+                            <td width = "18%" style = "padding-bottom: 4px; padding-top: 1px;">Fecha: </td>
+                            <td style = "padding-bottom: 4px; padding-top: 1px;" width = "28%"> <span t-field="doc.date_assign"/> </td>
+                            <td width = "18%" style = "padding-bottom: 4px; padding-top: 1px;">N° económico: </td>
+                            <td style = "padding-bottom: 4px; padding-top: 1px;" width = "30%" colspam = "2"> <span t-field="doc.partner_id.name"/></td>
+                        </tr>
+                        <tr>
+                            <td style = "padding-bottom: 4px; padding-top: 1px;">Cliente: </td>
+                            <td style = "padding-bottom: 4px; padding-top: 1px;" colspam = "2"><span t-field="doc.partner_id.name"/></td>
+                            <td style = "padding-bottom: 4px; padding-top: 1px;">Horometro inicial: </td>
+                            <td style = "padding-bottom: 4px; padding-top: 1px;"><span t-field="doc.start_hourmeter"/></td>
+                        </tr>
+
+                        <tr>
+                            <td style = "padding-bottom: 4px; padding-top: 1px;">Localización: </td>
+                            <td style = "padding-bottom: 4px; padding-top: 1px;" colspam = "2"></td>
+                            <td style = "padding-bottom: 4px; padding-top: 1px;" >Horometro final: </td>
+                            <td style = "padding-bottom: 4px; padding-top: 1px;" > <span t-field="doc.end_hourmeter"/> </td>
+                        </tr>
+                        <tr>
+                            <td style = "padding-bottom: 4px; padding-top: 1px;" >Numero de orden de compra: </td>
+                            <td style = "padding-bottom: 4px; padding-top: 1px;" colspam = "2"><span t-field="doc.sale_order_id.name"/></td>
+                            <td style = "padding-bottom: 4px; padding-top: 1px;">Total horas: </td>
+                            <td style = "padding-bottom: 4px; padding-top: 1px;"><span t-field="doc.planned_hours"/></td>
+                        </tr>
+                    </table>
+                    <div style = "margin:auto; padding-bottom:7px!important; padding-top:7px!important; margin-top:18px!important; margin-bottom:18px; text-align:center; color:white; background-color:black; width:100%; border-radius:10px ;font-weight: bold;">Cuadrilla</div>
+                    <br/>
+                    <div style="margin-top:5px ; margin-bottom:5px">
+                        <table style = "width:100%">
+                            <tr>
+                                <td>
+                                    Gruero:
+                                </td>
+                                <td t-if="doc.binacle_ids" style="border-bottom: black solid 1px">
+                                    <span t-field="doc.binacle_ids[0].gruero_id.name"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Ayudante:
+                                </td>
+                                <td t-if="doc.binacle_ids" style="border-bottom: black solid 1px">
+                                    <span t-field="doc.binacle_ids[0].support_id.name"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <br/>
+                    <div style = "margin:auto; padding-bottom:7px!important; padding-top:7px!important; margin-top:18px!important; margin-bottom:18px; text-align:center; color:white; background-color:black; width:100%; border-radius:10px ;font-weight: bold;">Tiempo</div>
+                    <br/>
+                    <div>
+                        <table style = "width:100% ; border: 1px solid black !important ;" >
+                            <thead>
+                                <th width = "15%" style = "text-align:center;border-left: 1px solid black !important; border-right: 1px solid black !important">Inicio</th>
+                                <th width = "15%" style = "text-align:center;border-left: 1px solid black !important; border-right: 1px solid black !important">Fin</th>
+                                <th width = "15%" style = "text-align:center;border-left: 1px solid black !important; border-right: 1px solid black !important">Total</th>
+                                <th width = "55%" style = "text-align:center;border-left: 1px solid black !important; border-right: 1px solid black !important">Operacion</th>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="doc.binacle_ids" t-as="line">
+                                    <tr style = "border: 1px solid black !important">
+                                        <td style = "text-align:center;border-left: 1px solid black !important; border-right: 1px solid black !important"><span t-field="line.date_init"/></td>
+                                        <td style = "text-align:center;border-left: 1px solid black !important; border-right: 1px solid black !important"><span t-field="line.date_end"/></td>
+                                        <td style = "text-align:center;border-left: 1px solid black !important; border-right: 1px solid black !important"><span t-field="line.delta"/></td>
+                                        <td style = "text-align:center;border-left: 1px solid black !important; border-right: 1px solid black !important"><span t-field="line.description"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+
+                        </table>
+                    </div>
+
+                    <div style = "margin-top:30px; margin-bottom:30px; border-radius:10px ;font-weight: bold; padding:5px">
+                        <table style = "width:100%;">
+                            <tr style="border-radius:10px ;font-weight: bold; padding:5px">
+                                <td width = "20%" style = "color: black; background-color: rgb(255,176,54) ;border-radius:10px ;font-weight: bold; padding:5px; text-align:center">CLIENTE</td>
+                                <td style = "color: white; background-color: black; border-radius:10px ;font-weight: bold; padding:5px; text-align:right">Recibo de conformidad y satisfaccion el servicio descrito en el presente reporte</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6">
+                            <table style = "width:100%">
+                                <tr>
+                                    <td>
+                                        Nombre:
+                                    </td>
+                                    <td style="border-bottom: black solid 1px">
+                                        <span t-field="doc.binacle_ids[0].gruero_id.name" style="color:transparent"/>
+                                    </td>
+                                </tr>
+                                <tr style="color:transparent">
+                                    <td style="color:transparent">
+                                        Esta es una fila fanstama para hacer espacio
+                                    </td>
+                                    <td style="color:transparent">
+                                        Esta es una fila fantasma para hacer espacio
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        Firma:
+                                    </td>
+                                    <td style="border-bottom: black solid 1px">
+                                        <span t-field="doc.binacle_ids[0].gruero_id.name" style="color:transparent"/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-6">
+                            <img class="img img-responsive center-block" src="src/user/cdd_sale_fleet/static/img/image_information.png" alt="Logo" style="max-height: 70px;" />
+                        </div>
+                    </div>
+                </div>  
+                
+                
+                <h6>reporte new222222</h6>
+            </t>  
+        </template>
+        
+        
+        <template id="sale_order_cdd_template_report_task">
+            <t t-call="web.html_container">
+                <!-- <t t-foreach="docs" t-as="doc"> -->
+                <!-- <t t-set="pages" t-value="docs[0].order_line_report(docs)"/>
+                -->
+                <t t-foreach="docs" t-as="doc">
+                    <t t-call="cdd_sale_fleet.sale_order_report_cdd_task"/>
+                </t>
+                <!-- </t> -->
+            </t>
+        </template>
+        
+        <report 
+            id="cdd_action_report_sale_task" 
+            model="project.task" 
+            string="Reporte para cliente"
+            report_type="qweb-pdf"
+            name="cdd_sale_fleet.sale_order_cdd_template_report_task" 
+            file="cdd_sale_fleet.sale_order_cdd_template_report_task"
+            print_report_name="'%s'%(object.name)"
+        />
+    </data>
+</odoo>
