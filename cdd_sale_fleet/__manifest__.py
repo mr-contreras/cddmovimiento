@@ -16,6 +16,7 @@
     # for the full list
     'category': 'Sale',
     'version': '1.0',
+    'license': 'OPL-1',
 
     # any module necessary for this one to work correctly
     'depends': ['base','project','sale','sale_project','hr','hr_timesheet'],
