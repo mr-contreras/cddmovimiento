@@ -1,43 +1,48 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError
-from datetime import timedelta,date
+from datetime import timedelta, date
 import logging
+
 _logger = logging.getLogger(__name__)
 
 
 class productProduct(models.Model):
     _inherit = 'product.product'
-    
+
     @api.model
     def _name_search(self, name, args=None, operator='ilike', limit=100, name_get_uid=None):
         args = args or []
-#         raise ValidationError('%s , contexto ==> %s'%(self._context.get('name_product_sale'), self._context))
-        
+        #         raise ValidationError('%s , contexto ==> %s'%(self._context.get('name_product_sale'), self._context))
+
         args = [('name', operator, name)] + args
         if self._context.get('name_product_sale'):
-            task = self.env['project.task'].browse(self._context.get('name_product_sale')) 
+            task = self.env['project.task'].browse(self._context.get('name_product_sale'))
             array_product = []
-            
-            for rec in task.sale_order_id.order_line:
+
+            filter_product = (p for p in task.sale_order_id.order_line if p.product_uom.id != 1)
+            for rec in filter_product:
                 if rec.product_id.id not in array_product:
                     array_product.append(rec.product_id.id)
 
             args = [('name', operator, name), ('id', 'in', array_product)] + args
-#             _logger.warning('paso _action_confirm@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@', task, array_product)
-#             print(nameError111)
+            #             _logger.warning('paso _action_confirm@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@', task, array_product)
+            #             print(nameError111)
             return self._search(args, limit=limit, access_rights_uid=name_get_uid)
         else:
-#             print(nameError222)
-            return super(productProduct, self)._name_search(name=name, args=args, operator=operator, limit=limit, name_get_uid=name_get_uid)
+            #             print(nameError222)
+            return super(productProduct, self)._name_search(name=name, args=args, operator=operator, limit=limit,
+                                                            name_get_uid=name_get_uid)
 
 
 class projectBinacle(models.Model):
     _name = 'project.binacle'
-    
-    parent_id = fields.Many2one('project.task', string='Proyecto', required=True, ondelete='cascade', index=True, copy=False, auto_join=True,)
-    product_id = fields.Many2one('product.product', string='Producto', required=True, ondelete='cascade', index=True, copy=False)
+
+    parent_id = fields.Many2one('project.task', string='Proyecto', required=True, ondelete='cascade', index=True,
+                                copy=False, auto_join=True, )
+    product_id = fields.Many2one('product.product', string='Producto', required=True, ondelete='cascade', index=True,
+                                 copy=False)
     description = fields.Char('Descripción', related='product_id.name')
     date_init = fields.Datetime('Fecha hora inicio')
     date_end = fields.Datetime('Fecha hora final')
@@ -47,64 +52,62 @@ class projectBinacle(models.Model):
     comment = fields.Char('Comentario')
     pre_parent_id = fields.Many2one('project.task', string='pre_parent')
     parent_id_int = fields.Integer(' ')
-    
-    
-    @api.depends('date_init','date_end','delta')
+
+    @api.depends('date_init', 'date_end', 'delta')
     def _compute_delta(self):
         for rec in self:
-            if rec.date_init and rec.date_end:            
-                
-                #rec.delta = (((rec.date_end.hour * 3600) + (rec.date_end.minute * 60) + rec.date_end.second) \
-                             #- ((rec.date_init.hour * 3600) + (rec.date_init.minute * 60) + rec.date_init.second)) / 3600
+            if rec.date_init and rec.date_end:
+
+                # rec.delta = (((rec.date_end.hour * 3600) + (rec.date_end.minute * 60) + rec.date_end.second) \
+                # - ((rec.date_init.hour * 3600) + (rec.date_init.minute * 60) + rec.date_init.second)) / 3600
                 rec.delta = (rec.date_end - rec.date_init).total_seconds() / 3600
-            else :
+            else:
                 rec.delta = 0
 
 
 class projectTask(models.Model):
     _inherit = 'project.task'
-    
-    
-#     planned_hours_compute = fields.Float("Horas planeadas 2", help='Time planned to achieve this task (including its sub-tasks).', tracking=True, compute = 'get_planned_hours_compute')
-    
+
+    #     planned_hours_compute = fields.Float("Horas planeadas 2", help='Time planned to achieve this task (including its sub-tasks).', tracking=True, compute = 'get_planned_hours_compute')
+
     binacle_ids = fields.One2many('project.binacle', 'parent_id', string='Bitacora')
     model_fleet_id = fields.Many2one('fleet.vehicle.model', string='Modelo/Grua')
     vehicle_id = fields.Many2one('fleet.vehicle', string='Grua')
 
-    start_odometer = fields.Float(string='Start Odometer',help='Odometer measure of the vehicle at the moment of this log')
+    start_odometer = fields.Float(string='Start Odometer',
+                                  help='Odometer measure of the vehicle at the moment of this log')
     start_odometer_unit = fields.Selection([
         ('kilometers', 'km'),
         ('miles', 'mi')
-        ], 'Odometer Unit', default='kilometers', help='Unit of the odometer ', required=True)
-    
-    end_odometer = fields.Float(string='End Odometer',help='Odometer measure of the vehicle at the moment of this log')
+    ], 'Odometer Unit', default='kilometers', help='Unit of the odometer ', required=True)
+
+    end_odometer = fields.Float(string='End Odometer', help='Odometer measure of the vehicle at the moment of this log')
     end_odometer_unit = fields.Selection([
         ('kilometers', 'km'),
         ('miles', 'mi')
-        ], 'Odometer Unit', default='kilometers', help='Unit of the odometer ', required=True)
+    ], 'Odometer Unit', default='kilometers', help='Unit of the odometer ', required=True)
 
-    
-    start_hourmeter = fields.Float(string='Start Hourmeter',help='Hourmeter measure of the vehicle at the moment of this log')
+    start_hourmeter = fields.Float(string='Start Hourmeter',
+                                   help='Hourmeter measure of the vehicle at the moment of this log')
     start_hourmeter_unit = fields.Selection([
         ('hours', 'hrs'),
-        ], 'hourmeter Unit', default='hours', help='Unit of the hourmeter ', required=True)
-    
-    end_hourmeter = fields.Float(string='End Horometer',help='horometer measure of the vehicle at the moment of this log')
+    ], 'hourmeter Unit', default='hours', help='Unit of the hourmeter ', required=True)
+
+    end_hourmeter = fields.Float(string='End Horometer',
+                                 help='horometer measure of the vehicle at the moment of this log')
     end_hourmeter_unit = fields.Selection([
         ('hours', 'hrs'),
-        ], 'Hourmeter Unit', default='hours', help='Unit of the hourmeter', required=True)
-    
-        
+    ], 'Hourmeter Unit', default='hours', help='Unit of the hourmeter', required=True)
+
     @api.model
     def create(self, vals):
         result = super(projectTask, self).create(vals)
-        
+
         if result.sale_order_id:
             total_hours = 0
             for line in result.sale_order_id.order_line:
-                total_hours +=  line.product_uom_qty
+                total_hours += line.product_uom_qty
 
-            
             result.planned_hours = total_hours
         return result
 
@@ -117,71 +120,68 @@ class projectTask(models.Model):
             self.start_hourmeter_unit = self.vehicle_id.start_hourmeter_unit
         else:
             self.start_odometer = 0.00
-            self.start_odometer_unit = False 
+            self.start_odometer_unit = False
             self.start_hourmeter = 0.00
-            self.start_hourmeter_unit = False 
-            
+            self.start_hourmeter_unit = False
+
     @api.constrains('binacle_ids')
     def _check_binacle_ids(self):
         # CODE HERE
         for line in self.binacle_ids:
             res = sum(self.binacle_ids.filtered(lambda x: x.product_id == line.product_id).mapped('delta'))
-            
-            #raise ValidationError('%s , %s '%(res, line.product_id.minimum_quantity))
-            
+
+            # raise ValidationError('%s , %s '%(res, line.product_id.minimum_quantity))
+
             if res > line.product_id.minimum_quantity:
-                raise ValidationError('El registro de horas no puede ser mayor a las horas planeadas si se necesitan más horas, el administrador deberá agregar horas a la cotización.')
-            
-            
+                raise ValidationError(
+                    'El registro de horas no puede ser mayor a las horas planeadas si se necesitan más horas, el administrador deberá agregar horas a la cotización.')
+
     def action_fsm_validate(self):
         super().action_fsm_validate()
-        
+
         timesheet_ids = []
-        
+
         for line in self.binacle_ids:
             if line.gruero_id:
-                #Registro Gruero
-                timesheet_ids.append((0,0,{
+                # Registro Gruero
+                timesheet_ids.append((0, 0, {
                     'date': date.today(),
-                    'x_studio_hora_inicio': line.date_init.date(),
+                    # 'x_studio_hora_inicio': line.date_init.date(),
                     'employee_id': line.gruero_id.id,
                     'name': line.description,
                     'unit_amount': line.delta,
                 }))
             if line.support_id:
-                #Registro Ayudante
-                timesheet_ids.append((0,0,{
+                # Registro Ayudante
+                timesheet_ids.append((0, 0, {
                     'date': date.today(),
-                    'x_studio_hora_inicio': line.date_init.date(),
+                    # 'x_studio_hora_inicio': line.date_init.date(),
                     'employee_id': line.support_id.id,
                     'name': line.description,
                     'unit_amount': line.delta,
                 }))
-        
-            #Crea registro del horometro en el vehiculo
-            self.env['fleet.vehicle.hourmeter'].create({
-                'date': date.today(),
-                'value': self.end_hourmeter,
-                'unit': self.end_hourmeter_unit,
-                'vehicle_id': self.vehicle_id.id,
-            })
-            
-            self.vehicle_id.start_hourmeter = self.end_hourmeter
-            self.vehicle_id.odometer = self.end_odometer
-            self.vehicle_id.write({'odometer':self.end_odometer,'odometer_unit':self.end_odometer_unit})
 
-    
+        # Crea registro del horometro en el vehiculo
+        self.env['fleet.vehicle.hourmeter'].create({
+            'date': date.today(),
+            'value': self.end_hourmeter,
+            'unit': self.end_hourmeter_unit,
+            'vehicle_id': self.vehicle_id.id,
+        })
+
+        self.vehicle_id.start_hourmeter = self.end_hourmeter
+        # self.vehicle_id.odometer = self.end_odometer
+        self.vehicle_id.write({'odometer': self.end_odometer, 'odometer_unit': self.end_odometer_unit})
+
         self.timesheet_ids = timesheet_ids
 
-    
-    #@api.model
-    #def default_get(self, fields):
-     #   res = super(projectTask, self).default_get(fields)
-        
-      
-    #context = dict(self.env.context)
-     #   context.update({'current_model':self , 'active_id':self.id})
-      #  self.env.context = context 
-        
-       # raise ValidationError(self._context)
-        #return res
+    # @api.model
+    # def default_get(self, fields):
+    #   res = super(projectTask, self).default_get(fields)
+
+    # context = dict(self.env.context)
+    #   context.update({'current_model':self , 'active_id':self.id})
+    #  self.env.context = context
+
+    # raise ValidationError(self._context)
+    # return res
