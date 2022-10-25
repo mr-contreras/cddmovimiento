@@ -144,24 +144,25 @@ class projectTask(models.Model):
         for line in self.binacle_ids:
             if line.gruero_id:
                 # Registro Gruero
+
                 timesheet_ids.append((0, 0, {
-                    'date': date.today(),
+                    'date': line.date_init.date(),
                     # 'x_studio_hora_inicio': line.date_init.date(),
                     'employee_id': line.gruero_id.id,
-                    'name': line.description,
+                    'name': line.comment,
                     'unit_amount': line.delta,
                 }))
             if line.support_id:
                 # Registro Ayudante
                 timesheet_ids.append((0, 0, {
-                    'date': date.today(),
+                    'date': line.date_init.date(),
                     # 'x_studio_hora_inicio': line.date_init.date(),
                     'employee_id': line.support_id.id,
-                    'name': line.description,
+                    'name': line.comment,
                     'unit_amount': line.delta,
                 }))
 
-        # Crea registro del horometro en el vehiculo
+        # Crea registro del horometro en el vehículo
         self.env['fleet.vehicle.hourmeter'].create({
             'date': date.today(),
             'value': self.end_hourmeter,
