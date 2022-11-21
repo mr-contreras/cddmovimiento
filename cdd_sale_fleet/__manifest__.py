@@ -19,7 +19,7 @@
     'license': 'OPL-1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base','project','sale','sale_project','hr','hr_timesheet'],
+    'depends': ['base','project','sale','sale_project','hr','hr_timesheet', 'report_xlsx','industry_fsm'],
 
     # always loaded
     'data': [
@@ -29,7 +29,9 @@
         'views/project_task.xml',
         'views/sale_order.xml',
         'views/view_task_form2_inherited.xml',
+        'views/view_task_form2_inherited.xml',
         'report/sale_order_report.xml',
+        'wizard/dayli_operations_report.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

@@ -42,7 +42,7 @@ class projectBinacle(models.Model):
     parent_id = fields.Many2one('project.task', string='Proyecto', required=True, ondelete='cascade', index=True,
                                 copy=False, auto_join=True, )
     product_id = fields.Many2one('product.product', string='Producto', required=True, ondelete='cascade', index=True,
-                                 copy=False)
+                                 copy=False,)
     description = fields.Char('Descripción', related='product_id.name')
     date_init = fields.Datetime('Fecha hora inicio')
     date_end = fields.Datetime('Fecha hora final')
@@ -52,7 +52,39 @@ class projectBinacle(models.Model):
     comment = fields.Char('Comentario')
     pre_parent_id = fields.Many2one('project.task', string='pre_parent')
     parent_id_int = fields.Integer(' ')
-
+    
+    available_product_ids = fields.Many2many('product.product', compute='_compute_available_product_ids')
+    
+    @api.depends('available_product_ids','product_id')
+    def _compute_available_product_ids(self):
+        for rec in self:
+            order_id = rec.env['sale.order'].browse(rec._context.get('active_id'))
+            if not order_id:
+                task = rec.env['project.task'].browse(rec._context.get('default_parent_id_int'))
+                _logger.warning('****************** TAKSK ******************')
+                _logger.warning('****************** TAKSK ******************')
+                _logger.warning(task)
+                _logger.warning(task.project_sale_order_id)
+                _logger.warning('****************** TAKSK ******************')
+                _logger.warning('****************** TAKSK ******************')
+                
+                order_id = rec.env['sale.order'].search([('tasks_ids','in',task.id)], limit=1)
+            res = order_id.order_line.mapped('product_id')
+            #raise ValidationError('res -- ---------------- %s ----- %s ---->>'%(res, rec._context))1
+            _logger.warning('productos disponibles -------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+            _logger.warning('productos disponibles -------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+            _logger.warning('productos disponibles -------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+            _logger.warning('productos disponibles -------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+            _logger.warning('productos disponibles -----2333--------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+            _logger.warning(res)
+            _logger.warning(rec._context)
+            _logger.warning('productos33333 disponibles -------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+            _logger.warning('productos disponibles -------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+            _logger.warning('productos disponibles -------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+            _logger.warning('productos disponibles -------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+            #print(op)
+            rec.available_product_ids = res
+        
     @api.depends('date_init', 'date_end', 'delta')
     def _compute_delta(self):
         for rec in self:
@@ -70,6 +102,10 @@ class projectTask(models.Model):
 
     #     planned_hours_compute = fields.Float("Horas planeadas 2", help='Time planned to achieve this task (including its sub-tasks).', tracking=True, compute = 'get_planned_hours_compute')
 
+    start_date_w = fields.Date(string="Start Date")
+    end_date_w = fields.Date(string="End Date")
+    
+    
     binacle_ids = fields.One2many('project.binacle', 'parent_id', string='Bitacora')
     model_fleet_id = fields.Many2one('fleet.vehicle.model', string='Modelo/Grua')
     vehicle_id = fields.Many2one('fleet.vehicle', string='Grua')
@@ -83,9 +119,8 @@ class projectTask(models.Model):
 
     end_odometer = fields.Float(string='End Odometer', help='Odometer measure of the vehicle at the moment of this log')
     end_odometer_unit = fields.Selection([
-        ('kilometers', 'km'),
         ('miles', 'mi')
-    ], 'Odometer Unit', default='kilometers', help='Unit of the odometer ', required=True)
+    ], 'Odometer Unit', default='miles', help='Unit of the odometer ', required=True)
 
     start_hourmeter = fields.Float(string='Start Hourmeter',
                                    help='Hourmeter measure of the vehicle at the moment of this log')
@@ -99,6 +134,34 @@ class projectTask(models.Model):
         ('hours', 'hrs'),
     ], 'Hourmeter Unit', default='hours', help='Unit of the hourmeter', required=True)
 
+    def reset_binacle_ids(self):
+#         return
+        self.end_date_w = False
+        self.start_date_w = False
+    
+    def get_binacle_ids(self):
+        
+#         raise ValidationError('---------------------------------inactivo. %s %s' %(self.start_date_w , self.end_date_w))
+#         print(op555)
+        
+        if self.start_date_w and self.end_date_w:
+#             print(op666)
+            return self.binacle_ids.filtered(lambda l: self.start_date_w >= l.date_init.date() and self.end_date_w <= l.date_init.date())
+        else: 
+            return self.binacle_ids
+        
+    def action_report_domain(self):
+        return {
+            'name': 'Reporte diario',
+            'type': 'ir.actions.act_window',
+            'res_model': 'dayli.operations.report.wizard',
+            'view_type': 'form',
+            'view_mode': 'form',
+            'target': 'new',
+        }
+    
+    
+    
     @api.model
     def create(self, vals):
         result = super(projectTask, self).create(vals)
@@ -176,6 +239,7 @@ class projectTask(models.Model):
 
         self.timesheet_ids = timesheet_ids
 
+    
     # @api.model
     # def default_get(self, fields):
     #   res = super(projectTask, self).default_get(fields)

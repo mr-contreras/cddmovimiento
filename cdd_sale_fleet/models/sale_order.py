@@ -19,8 +19,40 @@ class SaleOrder(models.Model):
 
             self.tasks_ids[0].planned_hours = total_hours
         return result
+    
+    def action_report_domain_2(self):
+        return {
+            'name': 'Reporte diario',
+            'type': 'ir.actions.act_window',
+            'res_model': 'operations.report.wizard',
+            'view_type': 'form',
+            'view_mode': 'form',
+            'target': 'new',
+        }
 
-
+    def get_names_users_assigned(self):
+        str_grueros = ''
+        if self.tasks_ids:
+            grueros_array = self.tasks_ids[0].user_ids.mapped('name')
+            for i in grueros_array: str_grueros+= (i + ' , ')
+        return str_grueros
+    
+    def get_status_invoice_paid(self, status):
+        payment_state = 'Sin Facturar'
+        if self.invoice_ids:
+            if status == 'not_paid':
+                payment_state = 'Sin pagar'
+            elif status == 'in_payment':
+                payment_state = 'En Proceso de Pago'
+            elif status == 'paid':
+                payment_state = 'Pagado'
+            elif status == 'partial':
+                payment_state = 'Pagado Parcialmente'
+            elif status == 'reversed':
+                payment_state = 'Revertido'
+            elif status == 'invoicing_legacy':
+                payment_state = 'Sistema anterior de facturacion' 
+        return payment_state
 #     @api.onchange('order_line')
 #     def recompute_hours_task(self):
 #         total_hours = 0
