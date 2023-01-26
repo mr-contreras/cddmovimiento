@@ -1,0 +1,67 @@
+<odoo>
+  <data>
+    <!-- account.move inherit form view -->
+    <record id="view_task_form2_inherit" model="ir.ui.view">
+        <field name="name">view.task.form2</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='description_page']" position="after">
+                <page name="binacle_page" string="Bitacora">
+                    
+                    <field name = "id" invisible = "1"/>
+                    <field name="binacle_ids" context="{'default_parent_id_int': id}">
+                        <tree editable="top">
+                            <field name = "parent_id_int" invisible = "1" force_save="1"/>
+                            <field name = "parent_id" invisible = "1"/>
+                            <field name = "product_id" context="{'name_product_sale': parent_id_int}" />
+<!--                            <field name = "description"/>-->
+                            <field name = "date_init" required="1"/>
+                            <field name = "date_end" required="1"/>
+                            <field name ="delta"/> 
+                            <field name = "gruero_id" required="1" context="{'employee_sale': parent_id_int}" options="{'no_open':True, 'no_create': True}" domain="[('type_employee','=','gruero')]"/>
+                            <field name = "support_id" required="1" context="{'employee_sale': parent_id_int}" options="{'no_open':True, 'no_create': True}" domain="[('type_employee','=','support')]"/>
+                            <field name = "comment"/>
+                        </tree>
+                        
+                    </field>
+                </page>
+                
+                
+            </xpath>
+            <xpath expr="//form[1]/sheet[1]/group[1]/group[1]/field[@name='user_ids']" position="after">
+                <field name="model_fleet_id"/>
+                <field name="vehicle_id" domain="[('model_id','=',model_fleet_id)]"/>
+                
+                <separator string="Odometer Info" colspan="4" />
+
+                <label for="start_odometer" />
+                <div class="o_row">
+                    <field name="start_odometer" readonly="True" force_save="1"/>
+                    <field name="start_odometer_unit" readonly="True" force_save="1"/>
+                </div>   
+                <label for="end_odometer" />
+                <div class="o_row">
+                    <field name="end_odometer"/>
+                    <field name="end_odometer_unit"/>
+                </div>  
+                
+                <separator string="Hourmeter Info" colspan="4" />
+
+                <label for="start_hourmeter"/>
+                <div class="o_row">
+                    <field name="start_hourmeter" widget="float_time" readonly="True" force_save="1"/>
+                    <field name="start_hourmeter_unit" readonly="True" force_save="1"/>
+                </div>  
+                <label for="end_hourmeter" />
+                <div class="o_row">
+                    <field name="end_hourmeter" widget="float_time"/>
+                    <field name="end_hourmeter_unit"/>
+                </div> 
+            </xpath>
+        </field>
+    </record>
+  </data>
+</odoo>
+
+
