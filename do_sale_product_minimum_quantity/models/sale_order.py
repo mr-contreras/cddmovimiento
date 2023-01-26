@@ -7,6 +7,7 @@ from odoo.exceptions import ValidationError
 class SaleOrder(models.Model):
     _inherit = "sale.order"
 
+    
     @api.constrains('order_line')
     def check_constraint_quantity(self):
         for record in self:
