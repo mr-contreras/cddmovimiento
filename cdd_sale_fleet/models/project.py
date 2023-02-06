@@ -21,7 +21,7 @@ class productProduct(models.Model):
             task = self.env['project.task'].browse(self._context.get('name_product_sale'))
             array_product = []
 
-            filter_product = (p for p in task.sale_order_id.order_line if p.product_uom.id != 1)
+            filter_product = (p for p in task.sale_order_id.order_line)
             for rec in filter_product:
                 if rec.product_id.id not in array_product:
                     array_product.append(rec.product_id.id)
