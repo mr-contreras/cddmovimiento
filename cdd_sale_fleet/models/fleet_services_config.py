@@ -7,13 +7,10 @@ from datetime import timedelta
 _logger = logging.getLogger(__name__)
 
 
-
 class ResPartner(models.Model):
     _inherit = 'res.partner'
 
     fleet_services_config_id = fields.Many2one(comodel_name='fleet.services.config', string='')
-    
-
 
 
 class FleetServicesConfig(models.Model):
@@ -29,12 +26,10 @@ class FleetServicesConfig(models.Model):
         default=lambda self: _('New'),
         copy=False
     )
-    
+
     quantity = fields.Integer(string='Cantidad')
     type_range = fields.Selection(string='Tipo', selection=[('hours', 'Horas'), ('days', 'Dias')], default='hours')
     # partner_notification_ids = fields.One2many(comodel_name='res.partner', inverse_name='fleet_services_config_id', string='')
     value_to_alert = fields.Integer(string='Tiempo antes de Alerta')
     value_month_to_alert = fields.Integer(string='Tiempo en meses para alerta')
-    value_horometer_alert = fields.Integer(string='Valor Horometro')    
-
-
+    value_horometer_alert = fields.Integer(string='Valor Horometro')

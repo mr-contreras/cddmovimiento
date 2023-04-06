@@ -7,8 +7,7 @@ from datetime import timedelta
 _logger = logging.getLogger(__name__)
 
 
-
-#Modelo para los checklist
+# Modelo para los checklist
 class FleetServiceCheckList(models.Model):
     _name = 'fleet.service.checklist'
     _description = 'Check list para los tipos de servicio.'
@@ -21,8 +20,8 @@ class FleetServiceCheckList(models.Model):
         required=True,
         default=lambda self: _('New'),
         copy=False
-    )   
-    
+    )
+
     type_service_id = fields.Many2one(comodel_name='fleet.services.config', string='Tipo de Servicio')
 
 
@@ -30,7 +29,5 @@ class FleetVehicleLogServices(models.Model):
     _inherit = 'fleet.vehicle.log.services'
 
     type_service_id = fields.Many2one(comodel_name='fleet.services.config', string='Tipo de Servicio')
-    
-    check_list_ids = fields.Many2many(comodel_name='fleet.service.checklist', string='')
 
-    
+    check_list_ids = fields.Many2many(comodel_name='fleet.service.checklist', string='')
