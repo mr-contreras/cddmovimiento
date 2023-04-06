@@ -9,6 +9,7 @@ class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
     model_fleet_id = fields.Many2one(comodel_name='fleet.vehicle.model', string='Modelo de la grúa')
+    nombre_pozo = fields.Char("Nombre Pozo", required=True)
 
     def write(self, vals):
         result = super(SaleOrder, self).write(vals)
@@ -88,7 +89,7 @@ class SaleOrderLine(models.Model):
         description = '<br/>'.join(sale_line_name_parts[1:])
         return {
             # 'name': title if project.sale_line_id else '%s: %s' % (self.order_id.name or '', title),
-            'name': '%s : %s' % (self.order_id.name, self.order_id.partner_id.name),
+            'name': '%s : %s' % (self.order_id.name, self.order_id.nombre_pozo),
             'planned_hours': planned_hours,
             'partner_id': self.order_id.partner_id.id,
             'email_from': self.order_id.partner_id.email,
