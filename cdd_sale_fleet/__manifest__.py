@@ -19,7 +19,7 @@
     'license': 'OPL-1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base','project','sale','sale_project','hr','hr_timesheet', 'report_xlsx','industry_fsm', 'account_move'],
+    'depends': ['base','project','sale','sale_project','hr','hr_timesheet', 'report_xlsx','industry_fsm'],
 
     # always loaded
     'data': [
