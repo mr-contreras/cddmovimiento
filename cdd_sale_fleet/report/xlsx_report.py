@@ -104,52 +104,305 @@ class projectTaskXlsx(models.AbstractModel):
         for rec in objs_n.sorted(lambda x: x.name , reverse = True):
                 
             #grueros = rec.tasks_ids[0].user_ids.filtered(lambda x : x.type_employee == 'gruero').mapped('name')
-            str_grueros = ''
-            if rec.tasks_ids:
-                grueros_array = rec.tasks_ids[0].user_ids.mapped('name')
-                for i in grueros_array: str_grueros+= (i + ' , ')
             
-            payment_state = 'Sin Facturar'
-            if rec.invoice_ids:
-                if rec.invoice_ids[0].payment_state == 'not_paid':
-                    payment_state = 'Sin pagar'
-                elif rec.invoice_ids[0].payment_state == 'in_payment':
-                    payment_state = 'En Proceso de Pago'
-                elif rec.invoice_ids[0].payment_state == 'paid':
-                    payment_state = 'Pagado'
-                elif rec.invoice_ids[0].payment_state == 'partial':
-                    payment_state = 'Pagado Parcialmente'
-                elif rec.invoice_ids[0].payment_state == 'reversed':
-                    payment_state = 'Revertido'
-                elif rec.invoice_ids[0].payment_state == 'invoicing_legacy':
-                    payment_state = 'Sistema anterior de facturacion' 
-                #ayudantes = rec.tasks_ids[0].user_ids.filtered(lambda x : x.type_employee == 'support').mapped('name')
+            
+            
+            
+            
+#             filter state ======================================
+            if objs_n.sorted(key=lambda r: r.id)[0].type_filtered == 'state':
+                if objs_n.sorted(key=lambda r: r.id)[0].state_wizard == rec.state:
+            
+                    str_grueros = ''
+                    if rec.tasks_ids:
+                        grueros_array = rec.tasks_ids[0].user_ids.mapped('name')
+                        for i in grueros_array: str_grueros+= (i + ' , ')
 
-            for line in rec.order_line:
-                                                               
-                sheet.write(y_title, 0, rec.name ,textWrap_table)
-                sheet.write(y_title, 1, rec.tasks_ids[0].vehicle_id.x_studio_numero_economico if rec.tasks_ids else '',textWrap_table)
-                sheet.write(y_title, 2, rec.partner_id.name,textWrap_table)
-                sheet.write(y_title, 3, '',textWrap_table)
-                sheet.write(y_title, 4, rec.date_order.strftime('%d-%m-%Y %H:%M:%S'),textWrap_table)
-                sheet.write(y_title, 5, rec.date_order.strftime('%d-%m-%Y %H:%M:%S'),textWrap_table)
-                sheet.write(y_title, 6, rec.tasks_ids[0].working_days_open  if rec.tasks_ids else '' ,textWrap_table)
+                    payment_state = 'Sin Facturar'
+                    if rec.invoice_ids:
+                        if rec.invoice_ids[0].payment_state == 'not_paid':
+                            payment_state = 'Sin pagar'
+                        elif rec.invoice_ids[0].payment_state == 'in_payment':
+                            payment_state = 'En Proceso de Pago'
+                        elif rec.invoice_ids[0].payment_state == 'paid':
+                            payment_state = 'Pagado'
+                        elif rec.invoice_ids[0].payment_state == 'partial':
+                            payment_state = 'Pagado Parcialmente'
+                        elif rec.invoice_ids[0].payment_state == 'reversed':
+                            payment_state = 'Revertido'
+                        elif rec.invoice_ids[0].payment_state == 'invoicing_legacy':
+                            payment_state = 'Sistema anterior de facturacion' 
+                        #ayudantes = rec.tasks_ids[0].user_ids.filtered(lambda x : x.type_employee == 'support').mapped('name')
 
-                sheet.write(y_title, 7, rec.tasks_ids[0].working_hours_open if rec.tasks_ids else '' ,textWrap_table)
-                sheet.write(y_title, 8, line.name,textWrap_table)
-                sheet.write(y_title, 9, line.price_unit,textWrap_table)
-                sheet.write(y_title, 10, line.product_uom_qty,textWrap_table)
-                sheet.write(y_title, 11, line.price_subtotal,textWrap_table)
-                sheet.write(y_title, 12, line.price_tax ,textWrap_table)
+                    for line in rec.order_line:
 
-                sheet.write(y_title, 13, (line.price_subtotal + line.price_tax) ,textWrap_table)
-                sheet.write(y_title, 14, payment_state,textWrap_table)
-                sheet.write(y_title, 15, rec.state ,textWrap_table)
-                sheet.write(y_title, 16, rec.tasks_ids[0].stage_id.name if rec.tasks_ids else '',textWrap_table)
-                sheet.write(y_title, 17, str_grueros if rec.tasks_ids else '',textWrap_table)
-                sheet.write(y_title, 18, '',textWrap_table)
+                        sheet.write(y_title, 0, rec.name ,textWrap_table)
+                        sheet.write(y_title, 1, rec.tasks_ids[0].vehicle_id.x_studio_numero_economico if rec.tasks_ids else '',textWrap_table)
+                        sheet.write(y_title, 2, rec.partner_id.name,textWrap_table)
+                        sheet.write(y_title, 3, rec.tasks_ids[0].partner_id.x_studio_ubicacin if rec.tasks_ids else '',textWrap_table)
+                        if rec.tasks_ids and rec.tasks_ids[0].binacle_ids:
+                            sheet.write(y_title, 4, rec.get_date_init(line).strftime('%d-%m-%Y %H:%M:%S') ,textWrap_table)
+                            sheet.write(y_title, 5, rec.get_date_end(line).strftime('%d-%m-%Y %H:%M:%S'),textWrap_table)
 
-                sheet.write(y_title, 19, str_grueros if rec.tasks_ids else '',textWrap_table)
-                sheet.write(y_title, 20, '',textWrap_table)
-                y_title+=1
-        
+                        else:
+                            sheet.write(y_title, 4, 'Sin bitacora' ,textWrap_table)
+                            sheet.write(y_title, 5, 'Sin bitacora' ,textWrap_table)
+                        sheet.write(y_title, 6, rec.get_days_total(line)  if rec.tasks_ids else '' ,textWrap_table)
+
+                        sheet.write(y_title, 7, rec.get_total_hours(line) if rec.tasks_ids else '' ,textWrap_table)
+                        sheet.write(y_title, 8, line.name,textWrap_table)
+                        sheet.write(y_title, 9, line.price_unit,textWrap_table)
+                        sheet.write(y_title, 10, line.product_uom_qty,textWrap_table)
+                        sheet.write(y_title, 11, line.price_subtotal,textWrap_table)
+                        sheet.write(y_title, 12, line.price_tax ,textWrap_table)
+
+                        sheet.write(y_title, 13, (line.price_subtotal + line.price_tax) ,textWrap_table)
+                        sheet.write(y_title, 14, payment_state,textWrap_table)
+                        sheet.write(y_title, 15, rec.state ,textWrap_table)
+                        sheet.write(y_title, 16, rec.tasks_ids[0].stage_id.name if rec.tasks_ids else '',textWrap_table)
+                        sheet.write(y_title, 17, str_grueros if rec.tasks_ids else '',textWrap_table)
+                        sheet.write(y_title, 18, '',textWrap_table)
+
+                        sheet.write(y_title, 19, str_grueros if rec.tasks_ids else '',textWrap_table)
+                        sheet.write(y_title, 20, line.product_id.minimum_quantity,textWrap_table)
+                        y_title+=1
+
+                    #             filter uni_eco ====================================
+            
+            if objs_n.sorted(key=lambda r: r.id)[0].type_filtered == 'uni_eco':
+                if rec.tasks_ids and rec.tasks_ids[0].vehicle_id and objs_n.sorted(key=lambda r: r.id)[0].vehicle_wizard_id.id == rec.tasks_ids[0].vehicle_id.id:
+            
+                    str_grueros = ''
+                    if rec.tasks_ids:
+                        grueros_array = rec.tasks_ids[0].user_ids.mapped('name')
+                        for i in grueros_array: str_grueros+= (i + ' , ')
+
+                    payment_state = 'Sin Facturar'
+                    if rec.invoice_ids:
+                        if rec.invoice_ids[0].payment_state == 'not_paid':
+                            payment_state = 'Sin pagar'
+                        elif rec.invoice_ids[0].payment_state == 'in_payment':
+                            payment_state = 'En Proceso de Pago'
+                        elif rec.invoice_ids[0].payment_state == 'paid':
+                            payment_state = 'Pagado'
+                        elif rec.invoice_ids[0].payment_state == 'partial':
+                            payment_state = 'Pagado Parcialmente'
+                        elif rec.invoice_ids[0].payment_state == 'reversed':
+                            payment_state = 'Revertido'
+                        elif rec.invoice_ids[0].payment_state == 'invoicing_legacy':
+                            payment_state = 'Sistema anterior de facturacion' 
+                        #ayudantes = rec.tasks_ids[0].user_ids.filtered(lambda x : x.type_employee == 'support').mapped('name')
+
+                    for line in rec.order_line:
+
+                        sheet.write(y_title, 0, rec.name ,textWrap_table)
+                        sheet.write(y_title, 1, rec.tasks_ids[0].vehicle_id.x_studio_numero_economico if rec.tasks_ids else '',textWrap_table)
+                        sheet.write(y_title, 2, rec.partner_id.name,textWrap_table)
+                        sheet.write(y_title, 3, rec.tasks_ids[0].partner_id.x_studio_ubicacin if rec.tasks_ids else '',textWrap_table)
+                        if rec.tasks_ids and rec.tasks_ids[0].binacle_ids:
+                            sheet.write(y_title, 4, rec.get_date_init(line).strftime('%d-%m-%Y %H:%M:%S') ,textWrap_table)
+                            sheet.write(y_title, 5, rec.get_date_end(line).strftime('%d-%m-%Y %H:%M:%S'),textWrap_table)
+
+                        else:
+                            sheet.write(y_title, 4, 'Sin bitacora' ,textWrap_table)
+                            sheet.write(y_title, 5, 'Sin bitacora' ,textWrap_table)
+                        sheet.write(y_title, 6, rec.get_days_total(line)  if rec.tasks_ids else '' ,textWrap_table)
+
+                        sheet.write(y_title, 7, rec.get_total_hours(line) if rec.tasks_ids else '' ,textWrap_table)
+                        sheet.write(y_title, 8, line.name,textWrap_table)
+                        sheet.write(y_title, 9, line.price_unit,textWrap_table)
+                        sheet.write(y_title, 10, line.product_uom_qty,textWrap_table)
+                        sheet.write(y_title, 11, line.price_subtotal,textWrap_table)
+                        sheet.write(y_title, 12, line.price_tax ,textWrap_table)
+
+                        sheet.write(y_title, 13, (line.price_subtotal + line.price_tax) ,textWrap_table)
+                        sheet.write(y_title, 14, payment_state,textWrap_table)
+                        sheet.write(y_title, 15, rec.state ,textWrap_table)
+                        sheet.write(y_title, 16, rec.tasks_ids[0].stage_id.name if rec.tasks_ids else '',textWrap_table)
+                        sheet.write(y_title, 17, str_grueros if rec.tasks_ids else '',textWrap_table)
+                        sheet.write(y_title, 18, '',textWrap_table)
+
+                        sheet.write(y_title, 19, str_grueros if rec.tasks_ids else '',textWrap_table)
+                        sheet.write(y_title, 20, line.product_id.minimum_quantity,textWrap_table)
+                        y_title+=1
+                        
+                        
+                                            #             filter creacion ====================================
+            
+            if objs_n.sorted(key=lambda r: r.id)[0].type_filtered == 'date_create':
+                if rec.date_order >=  objs_n.sorted(key=lambda r: r.id)[0].date_filtered_wizard_init and rec.date_order <= objs_n.sorted(key=lambda r: r.id)[0].date_filtered_wizard_end:
+            
+                    str_grueros = ''
+                    if rec.tasks_ids:
+                        grueros_array = rec.tasks_ids[0].user_ids.mapped('name')
+                        for i in grueros_array: str_grueros+= (i + ' , ')
+
+                    payment_state = 'Sin Facturar'
+                    if rec.invoice_ids:
+                        if rec.invoice_ids[0].payment_state == 'not_paid':
+                            payment_state = 'Sin pagar'
+                        elif rec.invoice_ids[0].payment_state == 'in_payment':
+                            payment_state = 'En Proceso de Pago'
+                        elif rec.invoice_ids[0].payment_state == 'paid':
+                            payment_state = 'Pagado'
+                        elif rec.invoice_ids[0].payment_state == 'partial':
+                            payment_state = 'Pagado Parcialmente'
+                        elif rec.invoice_ids[0].payment_state == 'reversed':
+                            payment_state = 'Revertido'
+                        elif rec.invoice_ids[0].payment_state == 'invoicing_legacy':
+                            payment_state = 'Sistema anterior de facturacion' 
+                        #ayudantes = rec.tasks_ids[0].user_ids.filtered(lambda x : x.type_employee == 'support').mapped('name')
+
+                    for line in rec.order_line:
+
+                        sheet.write(y_title, 0, rec.name ,textWrap_table)
+                        sheet.write(y_title, 1, rec.tasks_ids[0].vehicle_id.x_studio_numero_economico if rec.tasks_ids else '',textWrap_table)
+                        sheet.write(y_title, 2, rec.partner_id.name,textWrap_table)
+                        sheet.write(y_title, 3, rec.tasks_ids[0].partner_id.x_studio_ubicacin if rec.tasks_ids else '',textWrap_table)
+                        if rec.tasks_ids and rec.tasks_ids[0].binacle_ids:
+                            sheet.write(y_title, 4, rec.get_date_init(line).strftime('%d-%m-%Y %H:%M:%S') ,textWrap_table)
+                            sheet.write(y_title, 5, rec.get_date_end(line).strftime('%d-%m-%Y %H:%M:%S'),textWrap_table)
+
+                        else:
+                            sheet.write(y_title, 4, 'Sin bitacora' ,textWrap_table)
+                            sheet.write(y_title, 5, 'Sin bitacora' ,textWrap_table)
+                        
+                        sheet.write(y_title, 6, rec.get_days_total(line) if rec.tasks_ids else '' ,textWrap_table)
+                        sheet.write(y_title, 7, rec.get_total_hours(line) if rec.tasks_ids else '' ,textWrap_table)
+                        sheet.write(y_title, 8, line.name,textWrap_table)
+                        sheet.write(y_title, 9, line.price_unit,textWrap_table)
+                        sheet.write(y_title, 10, line.product_uom_qty,textWrap_table)
+                        sheet.write(y_title, 11, line.price_subtotal,textWrap_table)
+                        sheet.write(y_title, 12, line.price_tax ,textWrap_table)
+
+                        sheet.write(y_title, 13, (line.price_subtotal + line.price_tax) ,textWrap_table)
+                        sheet.write(y_title, 14, payment_state,textWrap_table)
+                        sheet.write(y_title, 15, rec.state ,textWrap_table)
+                        sheet.write(y_title, 16, rec.tasks_ids[0].stage_id.name if rec.tasks_ids else '',textWrap_table)
+                        sheet.write(y_title, 17, str_grueros if rec.tasks_ids else '',textWrap_table)
+                        sheet.write(y_title, 18, '',textWrap_table)
+
+                        sheet.write(y_title, 19, str_grueros if rec.tasks_ids else '',textWrap_table)
+                        sheet.write(y_title, 20, line.product_id.minimum_quantity ,textWrap_table)
+                        y_title+=1
+                        
+                        
+                                                         #             filter date_ejec ====================================
+            
+            if objs_n.sorted(key=lambda r: r.id)[0].type_filtered == 'date_ejec':
+                if rec.tasks_ids[0].date_last_stage_update >=  objs_n.sorted(key=lambda r: r.id)[0].date_filtered_wizard_init and rec.tasks_ids[0].date_last_stage_update <= objs_n.sorted(key=lambda r: r.id)[0].date_filtered_wizard_end:
+            
+                    str_grueros = ''
+                    if rec.tasks_ids:
+                        grueros_array = rec.tasks_ids[0].user_ids.mapped('name')
+                        for i in grueros_array: str_grueros+= (i + ' , ')
+
+                    payment_state = 'Sin Facturar'
+                    if rec.invoice_ids:
+                        if rec.invoice_ids[0].payment_state == 'not_paid':
+                            payment_state = 'Sin pagar'
+                        elif rec.invoice_ids[0].payment_state == 'in_payment':
+                            payment_state = 'En Proceso de Pago'
+                        elif rec.invoice_ids[0].payment_state == 'paid':
+                            payment_state = 'Pagado'
+                        elif rec.invoice_ids[0].payment_state == 'partial':
+                            payment_state = 'Pagado Parcialmente'
+                        elif rec.invoice_ids[0].payment_state == 'reversed':
+                            payment_state = 'Revertido'
+                        elif rec.invoice_ids[0].payment_state == 'invoicing_legacy':
+                            payment_state = 'Sistema anterior de facturacion' 
+                        #ayudantes = rec.tasks_ids[0].user_ids.filtered(lambda x : x.type_employee == 'support').mapped('name')
+
+                    for line in rec.order_line:
+
+                        sheet.write(y_title, 0, rec.name ,textWrap_table)
+                        sheet.write(y_title, 1, rec.tasks_ids[0].vehicle_id.x_studio_numero_economico if rec.tasks_ids else '',textWrap_table)
+                        sheet.write(y_title, 2, rec.partner_id.name,textWrap_table)
+                        sheet.write(y_title, 3, rec.tasks_ids[0].partner_id.x_studio_ubicacin if rec.tasks_ids else '',textWrap_table)
+                        
+                        if rec.tasks_ids and rec.tasks_ids[0].binacle_ids:
+                            sheet.write(y_title, 4, rec.get_date_init(line).strftime('%d-%m-%Y %H:%M:%S') ,textWrap_table)
+                            sheet.write(y_title, 5, rec.get_date_end(line).strftime('%d-%m-%Y %H:%M:%S'),textWrap_table)
+                        
+                        else:
+                            sheet.write(y_title, 4, 'Sin bitacora' ,textWrap_table)
+                            sheet.write(y_title, 5, 'Sin bitacora' ,textWrap_table)
+                        
+                        sheet.write(y_title, 6, rec.get_days_total(line)  if rec.tasks_ids else '' ,textWrap_table)
+
+                        sheet.write(y_title, 7, rec.get_total_hours(line) if rec.tasks_ids else '' ,textWrap_table)
+                        sheet.write(y_title, 8, line.name,textWrap_table)
+                        sheet.write(y_title, 9, line.price_unit,textWrap_table)
+                        sheet.write(y_title, 10, line.product_uom_qty,textWrap_table)
+                        sheet.write(y_title, 11, line.price_subtotal,textWrap_table)
+                        sheet.write(y_title, 12, line.price_tax ,textWrap_table)
+
+                        sheet.write(y_title, 13, (line.price_subtotal + line.price_tax) ,textWrap_table)
+                        sheet.write(y_title, 14, payment_state,textWrap_table)
+                        sheet.write(y_title, 15, rec.state ,textWrap_table)
+                        sheet.write(y_title, 16, rec.tasks_ids[0].stage_id.name if rec.tasks_ids else '',textWrap_table)
+                        sheet.write(y_title, 17, str_grueros if rec.tasks_ids else '',textWrap_table)
+                        sheet.write(y_title, 18, '',textWrap_table)
+
+                        sheet.write(y_title, 19, str_grueros if rec.tasks_ids else '',textWrap_table)
+                        sheet.write(y_title, 20, line.product_id.minimum_quantity,textWrap_table)
+                        y_title+=1
+                        
+                
+            if objs_n.sorted(key=lambda r: r.id)[0].type_filtered == 'all':
+                str_grueros = ''
+                if rec.tasks_ids:
+                    grueros_array = rec.tasks_ids[0].user_ids.mapped('name')
+                    for i in grueros_array: str_grueros+= (i + ' , ')
+
+                payment_state = 'Sin Facturar'
+                if rec.invoice_ids:
+                    if not rec.invoice_ids:
+                        payment_state = 'Sin factura'
+                    elif rec.invoice_ids[0].payment_state == 'not_paid':
+                        payment_state = 'Sin pagar'
+                    elif rec.invoice_ids[0].payment_state == 'in_payment':
+                        payment_state = 'En Proceso de Pago'
+                    elif rec.invoice_ids[0].payment_state == 'paid':
+                        payment_state = 'Pagado'
+                    elif rec.invoice_ids[0].payment_state == 'partial':
+                        payment_state = 'Pagado Parcialmente'
+                    elif rec.invoice_ids[0].payment_state == 'reversed':
+                        payment_state = 'Revertido'
+                    elif rec.invoice_ids[0].payment_state == 'invoicing_legacy':
+                        payment_state = 'Sistema anterior de facturacion' 
+                    #ayudantes = rec.tasks_ids[0].user_ids.filtered(lambda x : x.type_employee == 'support').mapped('name')
+
+                for line in rec.order_line:
+
+                    sheet.write(y_title, 0, rec.name ,textWrap_table)
+                    sheet.write(y_title, 1, rec.tasks_ids[0].vehicle_id.x_studio_numero_economico if rec.tasks_ids else '',textWrap_table)
+                    sheet.write(y_title, 2, rec.partner_id.name,textWrap_table)
+                    sheet.write(y_title, 3, rec.tasks_ids[0].partner_id.x_studio_ubicacin if rec.tasks_ids else '' ,textWrap_table)
+                    if rec.tasks_ids and rec.tasks_ids[0].binacle_ids:
+                        sheet.write(y_title, 4, rec.get_date_init(line).strftime('%d-%m-%Y %H:%M:%S') ,textWrap_table)
+                        sheet.write(y_title, 5, rec.get_date_end(line).strftime('%d-%m-%Y %H:%M:%S'),textWrap_table)
+
+                    else:
+                        sheet.write(y_title, 4, 'Sin bitacora' ,textWrap_table)
+                        sheet.write(y_title, 5, 'Sin bitacora' ,textWrap_table)
+                    
+                    
+                    sheet.write(y_title, 6, rec.get_days_total(line) if rec.tasks_ids else '' ,textWrap_table)
+                    sheet.write(y_title, 7, rec.get_total_hours(line) if rec.tasks_ids else '' ,textWrap_table)
+                    sheet.write(y_title, 8, line.name,textWrap_table)
+                    sheet.write(y_title, 9, line.price_unit,textWrap_table)
+                    sheet.write(y_title, 10, line.product_uom_qty,textWrap_table)
+                    sheet.write(y_title, 11, line.price_subtotal,textWrap_table)
+                    sheet.write(y_title, 12, line.price_tax ,textWrap_table)
+
+                    sheet.write(y_title, 13, (line.price_subtotal + line.price_tax) ,textWrap_table)
+                    sheet.write(y_title, 14, payment_state,textWrap_table)
+                    sheet.write(y_title, 15, rec.state ,textWrap_table)
+                    sheet.write(y_title, 16, rec.tasks_ids[0].stage_id.name if rec.tasks_ids else '',textWrap_table)
+                    sheet.write(y_title, 17, str_grueros if rec.tasks_ids else '',textWrap_table)
+                    sheet.write(y_title, 18, '',textWrap_table)
+
+                    sheet.write(y_title, 19, str_grueros if rec.tasks_ids else '',textWrap_table)
+                    sheet.write(y_title, 20, line.product_id.minimum_quantity,textWrap_table)
+                    y_title+=1

@@ -227,39 +227,249 @@
                         <tbody>
                             <!--t t-set="num_ec" t-value="N/A"/-->
                             <t t-foreach="docs.sorted(lambda x: x.name , reverse = True)" t-as="doc">
-                                <t t-if="doc.tasks_ids">
-                                    <t t-set="num_ec" t-value="doc.tasks_ids[0].vehicle_id.x_studio_numero_economico" />
-                                </t>
-                                <t t-if="doc.invoice_ids">
-                                    <t t-set="paid_status" t-value="doc.invoice_ids[0].payment_state"/>
-                                </t>
-                                <t t-foreach="doc.order_line" t-as="line">
-                                    <tr>
-                                        <td style = "border: 1px solid black;"><span t-field="doc.name"/></td>
-                                        <td style = "border: 1px solid black;"> <span t-esc="num_ec"/> </td>
-                                        <td style = "border: 1px solid black;"> <span t-field="doc.partner_id.name"/> </td>
+                                
+                                
+                                
+                                
+                                
+                                
+<!--                                 filtro state -->
+                                <t t-if = "docs.sorted(key=lambda r: r.id)[0].type_filtered == 'state'" >
+                                    <t t-if = "docs.sorted(key=lambda r: r.id)[0].state_wizard == doc.state " >
+                                        <t t-if="doc.tasks_ids">
+                                            <t t-set="num_ec" t-value="doc.tasks_ids[0].vehicle_id.x_studio_numero_economico" />
+                                        </t>
+                                        <t t-if="doc.invoice_ids">
+                                            <t t-set="paid_status" t-value="doc.invoice_ids[0].payment_state"/>
+                                        </t>
+                                        <t t-foreach="doc.order_line" t-as="line">
+                                            
+                                            <t t-set="date_init" t-value="'Sin bitacora'"/>
+                                            <t t-set="date_end" t-value="'Sin bitacora'"/>
 
-                                        <td style = "border: 1px solid black;"></td>
-                                        <td style = "border: 1px solid black;"> <span t-field="doc.date_order"/> </td>
-                                        <td style = "border: 1px solid black;"> <span t-field="doc.date_order"/> </td>
+                                            <t t-if="doc.tasks_ids and doc.tasks_ids[0].binacle_ids" t-set="date_init" t-value="doc.get_date_init(line)"/>
+                                            <t t-if="doc.tasks_ids and doc.tasks_ids[0].binacle_ids" t-set="date_end" t-value="doc.get_date_end(line)"/>
+                                            
+                                            <tr>
+                                                <td style = "border: 1px solid black;"><span t-field="doc.name"/></td>
+                                                <td style = "border: 1px solid black;"> <span t-esc="num_ec"/> </td>
+                                                <td style = "border: 1px solid black;"> <span t-field="doc.partner_id.name"/> </td>
 
-                                        <td style = "border: 1px solid black;"><span t-if="doc.tasks_ids" t-field="doc.tasks_ids[0].working_days_open"/>    </td>
-                                        <td style = "border: 1px solid black;"><span t-if="doc.tasks_ids" t-field="doc.tasks_ids[0].working_hours_open"/>    </td>
-                                        <td style = "border: 1px solid black;"> <span t-field="line.name"/> </td>
-                                        <td style = "border: 1px solid black;"> <span t-field="line.price_unit"/> </td>
-                                        <td style = "border: 1px solid black;"> <span t-field="line.product_uom_qty"/> </td>
-                                        <td style = "border: 1px solid black;"> <span t-field="line.price_subtotal"/> </td>
-                                        <td style = "border: 1px solid black;"><span t-field="line.price_tax"/></td>
-                                        <td style = "border: 1px solid black;"><span t-esc="line.price_tax + line.price_subtotal"/></td>
-                                        <td style = "border: 1px solid black;"><span t-esc="doc.get_status_invoice_paid(paid_status)"/>  </td>
-                                        <td style = "border: 1px solid black;"> <span t-field="doc.state"/> </td>
-                                        <td style = "border: 1px solid black;"> <span t-if="doc.tasks_ids" t-field="doc.tasks_ids[0].stage_id.name"/></td>
-                                        <td style = "border: 1px solid black;"><span t-esc="doc.get_names_users_assigned()"/></td>
-                                        <td style = "border: 1px solid black;"><span t-esc="doc.get_names_users_assigned()"/></td>
-                                        <td style = "border: 1px solid black;"></td>
-                                    </tr>
+                                                <td style = "border: 1px solid black;">  <span t-if="doc.tasks_ids" t-field="doc.tasks_ids[0].partner_id.x_studio_ubicacin"/> </td>
+                                                <td style = "border: 1px solid black;"> <span  t-esc="date_init"/> </td>
+                                                <td style = "border: 1px solid black;"> <span t-esc="date_end"/> </td>
+
+                                                <td style = "border: 1px solid black;"><span t-if="doc.tasks_ids and doc.tasks_ids[0].binacle_ids" t-esc="doc.get_days_total(line)"/>    </td>
+                                                <td style = "border: 1px solid black;"><span t-if="doc.tasks_ids and doc.tasks_ids[0].binacle_ids" t-esc="doc.get_total_hours(line)"/>    </td>
+                                                <td style = "border: 1px solid black;"> <span t-field="line.name"/> </td>
+                                                <td style = "border: 1px solid black;"> <span t-field="line.price_unit"/> </td>
+                                                <td style = "border: 1px solid black;"> <span t-field="line.product_uom_qty"/> </td>
+                                                <td style = "border: 1px solid black;"> <span t-field="line.price_subtotal"/> </td>
+                                                <td style = "border: 1px solid black;"><span t-field="line.price_tax"/></td>
+                                                <td style = "border: 1px solid black;"><span t-esc="line.price_tax + line.price_subtotal"/></td>
+                                                <td style = "border: 1px solid black;"><span t-esc="doc.get_status_invoice_paid(paid_status)"/>  </td>
+                                                <td style = "border: 1px solid black;"> <span t-field="doc.state"/> </td>
+                                                <td style = "border: 1px solid black;"> <span t-if="doc.tasks_ids" t-field="doc.tasks_ids[0].stage_id.name"/></td>
+                                                <td style = "border: 1px solid black;"><span t-esc="doc.get_names_users_assigned()"/></td>
+                                                <td style = "border: 1px solid black;"><span t-esc="doc.get_names_users_assigned()"/></td>
+                                                <td style = "border: 1px solid black;">  <span t-esc="line.product_id.minimum_quantity"/> </td>
+                                            </tr>
+                                        </t>
+                                    </t>
                                 </t>
+                                
+                                
+                                <!--                                 filtro unidad -->
+                                
+                                <t t-if = "docs.sorted(key=lambda r: r.id)[0].type_filtered == 'uni_eco'" >
+                                    <t t-if = "doc.tasks_ids and doc.tasks_ids[0].vehicle_id">
+                                        <t t-if = "docs.sorted(key=lambda r: r.id)[0].vehicle_wizard_id.id == doc.tasks_ids[0].vehicle_id.id " >
+                                            <t t-if="doc.tasks_ids">
+                                                <t t-set="num_ec" t-value="doc.tasks_ids[0].vehicle_id.x_studio_numero_economico" />
+                                            </t>
+                                            <t t-if="doc.invoice_ids">
+                                                <t t-set="paid_status" t-value="doc.invoice_ids[0].payment_state"/>
+                                            </t>
+                                            <t t-foreach="doc.order_line" t-as="line">
+                                                
+                                                <t t-set="date_init" t-value="'Sin bitacora'"/>
+                                                <t t-set="date_end" t-value="'Sin bitacora'"/>
+
+                                                <t t-if="doc.tasks_ids and doc.tasks_ids[0].binacle_ids" t-set="date_init" t-value="doc.get_date_init(line)"/>
+                                                <t t-if="doc.tasks_ids and doc.tasks_ids[0].binacle_ids" t-set="date_end" t-value="doc.get_date_end(line)"/>
+                                                
+                                                
+                                                <tr>
+                                                    <td style = "border: 1px solid black;"><span t-field="doc.name"/></td>
+                                                    <td style = "border: 1px solid black;"> <span t-esc="num_ec"/> </td>
+                                                    <td style = "border: 1px solid black;"> <span t-field="doc.partner_id.name"/> </td>
+
+                                                    <td style = "border: 1px solid black;"> <span t-if="doc.tasks_ids" t-field="doc.tasks_ids[0].partner_id.x_studio_ubicacin"/> </td>
+                                                    <td style = "border: 1px solid black;"> <span  t-esc="date_init"/> </td>
+                                                    <td style = "border: 1px solid black;"> <span t-esc="date_end"/> </td>
+
+                                                    <td style = "border: 1px solid black;"><span t-if="doc.tasks_ids and doc.tasks_ids[0].binacle_ids" t-esc="doc.get_days_total(line)"/>    </td>
+                                                    <td style = "border: 1px solid black;"><span t-if="doc.tasks_ids and doc.tasks_ids[0].binacle_ids" t-esc="doc.get_total_hours(line)"/>    </td>
+                                                    <td style = "border: 1px solid black;"> <span t-field="line.name"/> </td>
+                                                    <td style = "border: 1px solid black;"> <span t-field="line.price_unit"/> </td>
+                                                    <td style = "border: 1px solid black;"> <span t-field="line.product_uom_qty"/> </td>
+                                                    <td style = "border: 1px solid black;"> <span t-field="line.price_subtotal"/> </td>
+                                                    <td style = "border: 1px solid black;"><span t-field="line.price_tax"/></td>
+                                                    <td style = "border: 1px solid black;"><span t-esc="line.price_tax + line.price_subtotal"/></td>
+                                                    <td style = "border: 1px solid black;"><span t-esc="doc.get_status_invoice_paid(paid_status)"/>  </td>
+                                                    <td style = "border: 1px solid black;"> <span t-field="doc.state"/> </td>
+                                                    <td style = "border: 1px solid black;"> <span t-if="doc.tasks_ids" t-field="doc.tasks_ids[0].stage_id.name"/></td>
+                                                    <td style = "border: 1px solid black;"><span t-esc="doc.get_names_users_assigned()"/></td>
+                                                    <td style = "border: 1px solid black;"><span t-esc="doc.get_names_users_assigned()"/></td>
+                                                    <td style = "border: 1px solid black;">  <span t-esc="line.product_id.minimum_quantity"/> </td>
+                                                </tr>
+                                            </t>
+                                        </t>
+                                    </t>
+                                </t>
+                                
+                                
+                                <!--                                 fecha creacion -->
+                                
+                                <t t-if = "docs.sorted(key=lambda r: r.id)[0].type_filtered == 'date_create'" >
+                                    
+                                    <t t-if = "doc.date_order >=  docs.sorted(key=lambda r: r.id)[0].date_filtered_wizard_init and doc.date_order &lt; docs.sorted(key=lambda r: r.id)[0].date_filtered_wizard_end " >
+                                        <t t-if="doc.tasks_ids">
+                                            <t t-set="num_ec" t-value="doc.tasks_ids[0].vehicle_id.x_studio_numero_economico" />
+                                        </t>
+                                        <t t-if="doc.invoice_ids">
+                                            <t t-set="paid_status" t-value="doc.invoice_ids[0].payment_state"/>
+                                        </t>
+                                        <t t-foreach="doc.order_line" t-as="line">
+                                            <t t-set="date_init" t-value="'Sin bitacora'"/>
+                                            <t t-set="date_end" t-value="'Sin bitacora'"/>
+
+                                            <t t-if="doc.tasks_ids and doc.tasks_ids[0].binacle_ids" t-set="date_init" t-value="doc.get_date_init(line)"/>
+                                            <t t-if="doc.tasks_ids and doc.tasks_ids[0].binacle_ids" t-set="date_end" t-value="doc.get_date_end(line)"/>
+                                            <tr>
+                                                <td style = "border: 1px solid black;"><span t-field="doc.name"/></td>
+                                                <td style = "border: 1px solid black;"> <span t-esc="num_ec"/> </td>
+                                                <td style = "border: 1px solid black;"> <span t-field="doc.partner_id.name"/> </td>
+
+                                                <td style = "border: 1px solid black;"> <span t-if="doc.tasks_ids" t-field="doc.tasks_ids[0].partner_id.x_studio_ubicacin"/> </td>
+                                                <td style = "border: 1px solid black;"> <span  t-esc="date_init"/> </td>
+                                                <td style = "border: 1px solid black;"> <span t-esc="date_end"/> </td>
+
+                                                <td style = "border: 1px solid black;"><span t-if="doc.tasks_ids and doc.tasks_ids[0].binacle_ids" t-esc="doc.get_days_total(line)"/>    </td>
+                                                <td style = "border: 1px solid black;"><span t-if="doc.tasks_ids and doc.tasks_ids[0].binacle_ids" t-esc="doc.get_total_hours(line)"/>    </td>
+                                                <td style = "border: 1px solid black;"> <span t-field="line.name"/> </td>
+                                                <td style = "border: 1px solid black;"> <span t-field="line.price_unit"/> </td>
+                                                <td style = "border: 1px solid black;"> <span t-field="line.product_uom_qty"/> </td>
+                                                <td style = "border: 1px solid black;"> <span t-field="line.price_subtotal"/> </td>
+                                                <td style = "border: 1px solid black;"><span t-field="line.price_tax"/></td>
+                                                <td style = "border: 1px solid black;"><span t-esc="line.price_tax + line.price_subtotal"/></td>
+                                                <td style = "border: 1px solid black;"><span t-esc="doc.get_status_invoice_paid(paid_status)"/>  </td>
+                                                <td style = "border: 1px solid black;"> <span t-field="doc.state"/> </td>
+                                                <td style = "border: 1px solid black;"> <span t-if="doc.tasks_ids" t-field="doc.tasks_ids[0].stage_id.name"/></td>
+                                                <td style = "border: 1px solid black;"><span t-esc="doc.get_names_users_assigned()"/></td>
+                                                <td style = "border: 1px solid black;"><span t-esc="doc.get_names_users_assigned()"/></td>
+                                                <td style = "border: 1px solid black;">  <span t-esc="line.product_id.minimum_quantity"/> </td>
+                                            </tr>
+                                        </t>
+                                    </t>
+                                    
+                                </t>
+                                
+                                
+                                <!--                                 fecha  ejecucion  -->
+                                
+                                <t t-if = "docs.sorted(key=lambda r: r.id)[0].type_filtered == 'date_ejec'" >
+                                    <t t-if = "doc.tasks_ids[0].date_last_stage_update >=  docs.sorted(key=lambda r: r.id)[0].date_filtered_wizard_init and doc.tasks_ids[0].date_last_stage_update &lt; docs.sorted(key=lambda r: r.id)[0].date_filtered_wizard_end " >
+                                        <t t-if="doc.tasks_ids">
+                                            <t t-set="num_ec" t-value="doc.tasks_ids[0].vehicle_id.x_studio_numero_economico" />
+                                        </t>
+                                        <t t-if="doc.invoice_ids">
+                                            <t t-set="paid_status" t-value="doc.invoice_ids[0].payment_state"/>
+                                        </t>
+                                        <t t-foreach="doc.order_line" t-as="line">
+                                            <t t-set="date_init" t-value="'Sin bitacora'"/>
+                                            <t t-set="date_end" t-value="'Sin bitacora'"/>
+
+                                            <t t-if="doc.tasks_ids and doc.tasks_ids[0].binacle_ids" t-set="date_init" t-value="doc.get_date_init(line)"/>
+                                        <t t-if="doc.tasks_ids and doc.tasks_ids[0].binacle_ids" t-set="date_end" t-value="doc.get_date_end(line)"/>
+                                            <tr>
+                                                <td style = "border: 1px solid black;"><span t-field="doc.name"/></td>
+                                                <td style = "border: 1px solid black;"> <span t-esc="num_ec"/> </td>
+                                                <td style = "border: 1px solid black;"> <span t-field="doc.partner_id.name"/> </td>
+
+                                                <td style = "border: 1px solid black;"> <span t-if="doc.tasks_ids" t-field="doc.tasks_ids[0].partner_id.x_studio_ubicacin"/> </td>
+                                                <td style = "border: 1px solid black;"> <span  t-esc="date_init"/> </td>
+                                                <td style = "border: 1px solid black;"> <span t-esc="date_end"/> </td>
+
+                                                <td style = "border: 1px solid black;"><span t-if="doc.tasks_ids and doc.tasks_ids[0].binacle_ids" t-esc="doc.get_days_total(line)"/>    </td>
+                                                <td style = "border: 1px solid black;"><span t-if="doc.tasks_ids and doc.tasks_ids[0].binacle_ids" t-esc="doc.get_total_hours(line)"/>    </td>
+                                                <td style = "border: 1px solid black;"> <span t-field="line.name"/> </td>
+                                                <td style = "border: 1px solid black;"> <span t-field="line.price_unit"/> </td>
+                                                <td style = "border: 1px solid black;"> <span t-field="line.product_uom_qty"/> </td>
+                                                <td style = "border: 1px solid black;"> <span t-field="line.price_subtotal"/> </td>
+                                                <td style = "border: 1px solid black;"><span t-field="line.price_tax"/></td>
+                                                <td style = "border: 1px solid black;"><span t-esc="line.price_tax + line.price_subtotal"/></td>
+                                                <td style = "border: 1px solid black;"><span t-esc="doc.get_status_invoice_paid(paid_status)"/>  </td>
+                                                <td style = "border: 1px solid black;"> <span t-field="doc.state"/> </td>
+                                                <td style = "border: 1px solid black;"> <span t-if="doc.tasks_ids" t-field="doc.tasks_ids[0].stage_id.name"/></td>
+                                                <td style = "border: 1px solid black;"><span t-esc="doc.get_names_users_assigned()"/></td>
+                                                <td style = "border: 1px solid black;"><span t-esc="doc.get_names_users_assigned()"/></td>
+                                                <td style = "border: 1px solid black;">  <span t-esc="line.product_id.minimum_quantity"/> </td>
+                                            </tr>
+                                        </t>
+                                    </t>
+                                    
+                                </t>
+                                
+                                
+                                <t t-if = "docs.sorted(key=lambda r: r.id)[0].type_filtered == 'all'" >
+                                    
+                                    <!--t t-set="num_ec" t-value="doc.tasks_ids[0].vehicle_id.x_studio_numero_economico" /-->
+                                    <t t-if="doc.invoice_ids">
+                                        <t t-set="paid_status" t-value="doc.invoice_ids[0].payment_state"/>
+                                    </t>
+                                    <t t-foreach="doc.order_line" t-as="line">
+                                        <t t-set="date_init" t-value="'Sin bitacora'"/>
+                                        <t t-set="date_end" t-value="'Sin bitacora'"/>
+
+                                        <t t-if="doc.tasks_ids and doc.tasks_ids[0].binacle_ids" t-set="date_init" t-value="doc.get_date_init(line)"/>
+                                        <t t-if="doc.tasks_ids and doc.tasks_ids[0].binacle_ids" t-set="date_end" t-value="doc.get_date_end(line)"/>
+                                        
+                                        <tr>
+                                            <td style = "border: 1px solid black;"><span t-field="doc.name"/></td>
+                                            <td style = "border: 1px solid black;"> <span t-if="doc.tasks_ids" t-field="doc.tasks_ids[0].vehicle_id.x_studio_numero_economico"/> </td>
+                                            <td style = "border: 1px solid black;"> <span t-field="doc.partner_id.name"/> </td>
+
+                                            <td style = "border: 1px solid black;"> <span t-if="doc.tasks_ids" t-field="doc.tasks_ids[0].partner_id.x_studio_ubicacin"/> </td>
+                                            <td style = "border: 1px solid black;"> <span  t-esc="date_init"/> </td>
+                                            <td style = "border: 1px solid black;"> <span t-esc="date_end"/> </td>
+
+                                            <td style = "border: 1px solid black;"><span t-if="doc.tasks_ids and doc.tasks_ids[0].binacle_ids" t-esc="doc.get_days_total(line)"/>    </td>
+                                            <td style = "border: 1px solid black;"><span t-if="doc.tasks_ids and doc.tasks_ids[0].binacle_ids" t-esc="doc.get_total_hours(line)"/>    </td>
+                                            <td style = "border: 1px solid black;"> <span t-field="line.name"/> </td>
+                                            <td style = "border: 1px solid black;"> <span t-field="line.price_unit"/> </td>
+                                            <td style = "border: 1px solid black;"> <span t-field="line.product_uom_qty"/> </td>
+                                            <td style = "border: 1px solid black;"> <span t-field="line.price_subtotal"/> </td>
+                                            <td style = "border: 1px solid black;"><span t-field="line.price_tax"/></td>
+                                            <td style = "border: 1px solid black;"><span t-esc="line.price_tax + line.price_subtotal"/></td>
+                                            <td style = "border: 1px solid black;"><span t-esc="doc.get_status_invoice_paid(paid_status)"/>  </td>
+                                            <td style = "border: 1px solid black;"> <span t-field="doc.state"/> </td>
+                                            <td style = "border: 1px solid black;"> <span t-if="doc.tasks_ids" t-field="doc.tasks_ids[0].stage_id.name"/></td>
+                                            <td style = "border: 1px solid black;"><span t-esc="doc.get_names_users_assigned()"/></td>
+                                            <td style = "border: 1px solid black;"><span t-esc="doc.get_names_users_assigned()"/></td>
+                                            <td style = "border: 1px solid black;">  <span t-esc="line.product_id.minimum_quantity"/> </td>
+                                        </tr>
+                                    </t>
+                                    
+                                    
+                                </t>
+                                
+                                
                             </t>
+                            
+                            
+                            
+                            
                         </tbody>
                     </table>
                     <br/>
@@ -306,16 +516,16 @@
             </t>
         </template>
         
-        
        
-        
         <record id="cdd_action_report_sale_task_2" model="ir.actions.report">
-            <field name="name">Reporte general</field>
+            <field name="name">report</field>
             <field name="model">sale.order</field>
             <field name="report_type">qweb-pdf</field>
             <field name="report_name">cdd_sale_fleet.sale_order_cdd_template_report_task_general</field>
             <field name="report_file">cdd_sale_fleet.sale_order_cdd_template_report_task_general</field>
-            <field name="paperformat_id" ref="report_qweb_inherit" />
+            <field name="print_report_name">'Inventory - %s' % (object.report_name)</field>
+            <field name="binding_model_id" ref="model_sale_order"/>
+            <field name="binding_type">report</field>
         </record>
         
         <record id="cdd_action_report_sale_task_2_xlsx" model="ir.actions.report">
@@ -324,7 +534,7 @@
             <field name="report_type">xlsx</field>
             <field name="report_name">project.task.xlsx</field>
             <field name="report_file">project.task.xlsx</field>
-            <field name="print_report_name">'%s'%(object.name)</field>
+            <field name="print_report_name">'%s'%(object.report_name)</field>
             <field name="binding_model_id" ref="model_project_task"/>
             <field name="binding_type">report</field>
         </record>
