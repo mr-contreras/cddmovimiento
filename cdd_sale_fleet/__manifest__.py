@@ -19,7 +19,7 @@
     'license': 'OPL-1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base','project','sale','sale_project','hr','hr_timesheet', 'report_xlsx','industry_fsm'],
+    'depends': ['base','project','sale','sale_project','hr','hr_timesheet', 'report_xlsx','industry_fsm', 'account_move'],
 
     # always loaded
     'data': [
@@ -28,6 +28,7 @@
         'views/hr_employee.xml',
         'views/project_task.xml',
         'views/sale_order.xml',
+        'views/account_move.xml',
         'views/view_task_form2_inherited.xml',
         'views/view_task_form2_inherited.xml',
         'report/sale_order_report.xml',
