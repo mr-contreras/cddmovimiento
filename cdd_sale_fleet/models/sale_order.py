@@ -164,9 +164,9 @@ class SaleOrderLine(models.Model):
                 self.write({'project_id': project.id})
                 return project
 
-    def _prepare_invoice_line(self):
+    def _prepare_invoice(self):
         self.ensure_one()
-        res = super(SaleOrderLine, self)._prepare_invoice_line()
+        res = super(SaleOrder, self)._prepare_invoice()
         res['nombre_pozo'] = self.order_id.nombre_pozo
         return res
 
