@@ -4,6 +4,6 @@ access_fleet_vehicle_hourmeter_user,cdd_sale_fleet.fleet.vehicle.hourmeter,model
 
 access_dayli_operations_report_wizard,dayli_operations_report_wizard,model_dayli_operations_report_wizard,,1,1,1,1
 access_operations_report_wizard,operations_report_wizard,model_operations_report_wizard,,1,1,1,1
-access_fleet_services_config_user,cdd_sale_fleet.fleet.services.config,model_fleet_services_config,,1,1,1,1
-access_fleet_maintenance_notifications_user,cdd_sale_fleet.fleet.maintenance.notifications,model_fleet_maintenance_notifications,,1,1,1,1
-access_fleet_service_checklist_user,cdd_sale_fleet.fleet.service.checklist,model_fleet_service_checklist,,1,1,1,1
+access_fleet_services_config_user,cdd_sale_fleet.fleet.services.config,model_fleet_services_config,base.group_user,1,1,1,1
+access_fleet_maintenance_notifications_user,cdd_sale_fleet.fleet.maintenance.notifications,model_fleet_maintenance_notifications,base.group_user,1,1,1,1
+access_fleet_service_checklist_user,cdd_sale_fleet.fleet.service.checklist,model_fleet_service_checklist,base.group_user,1,1,1,1
