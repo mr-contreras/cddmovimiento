@@ -191,11 +191,11 @@ class projectTask(models.Model):
         for line in self.binacle_ids:
             res = sum(self.binacle_ids.filtered(lambda x: x.product_id == line.product_id).mapped('delta'))
 
-            # raise ValidationError('%s , %s '%(res, line.product_id.minimum_quantity))
-
-            if res > line.product_id.minimum_quantity:
+            if res > sum(self.sale_order_id.order_line.filtered(lambda x: x.product_id == line.product_id).mapped(
+                    'product_uom_qty')):
                 raise ValidationError(
-                    'El registro de horas no puede ser mayor a las horas planeadas si se necesitan más horas, el administrador deberá agregar horas a la cotización.')
+                    'El registro de horas no puede ser mayor a las horas cotizadas si se necesitan más horas, '
+                    'el administrador deberá agregar horas a la cotización.')
 
     def action_fsm_validate(self):
         super().action_fsm_validate()
