@@ -4,6 +4,7 @@ from odoo import models, fields, api
 from odoo.exceptions import ValidationError
 from datetime import timedelta, date
 import logging
+import pytz
 
 _logger = logging.getLogger(__name__)
 
@@ -140,13 +141,12 @@ class projectTask(models.Model):
 
     def get_binacle_ids(self):
 
-        #         raise ValidationError('---------------------------------inactivo. %s %s' %(self.start_date_w , self.end_date_w))
-        #         print(op555)
-
         if self.start_date_w and self.end_date_w:
-            #             print(op666)
+            user_tz = self.env.user.tz or pytz.utc
+
             return self.binacle_ids.filtered(
-                lambda l: self.start_date_w >= l.date_init.date() and self.end_date_w <= l.date_init.date())
+                lambda l: self.start_date_w <= (
+                    l.date_init.astimezone(pytz.timezone(user_tz))).date() <= self.end_date_w)
         else:
             return self.binacle_ids
 
