@@ -65,7 +65,15 @@
                                     Gruero:
                                 </td>
                                 <td style="border: none" t-if="doc.get_binacle_ids()">
-                                    <span t-field="doc.get_binacle_ids()[0].gruero_id.name"/>
+                                    <t t-set="grueros" t-value="''"/>
+                                    <t t-foreach="doc.get_binacle_ids().sorted(key=lambda l: l.date_init)" t-as="line">
+                                        <span t-if="line.gruero_id.name not in grueros">
+                                            <thread>
+                                                <t t-set='grueros' t-value="grueros +','+line.gruero_id.name"/>
+                                            </thread>
+                                            <a> <span t-field="line.gruero_id.name"/> / </a>
+                                        </span>
+                                    </t>
                                 </td>
                             </tr>
                             <tr>
@@ -73,7 +81,15 @@
                                     Ayudante:
                                 </td>
                                 <td style="border: none" t-if="doc.get_binacle_ids()">
-                                    <span t-field="doc.get_binacle_ids()[0].support_id.name"/>
+                                    <t t-set="ayudantes" t-value="''"/>
+                                    <t t-foreach="doc.get_binacle_ids().sorted(key=lambda l: l.date_init)" t-as="line">
+                                        <span t-if="line.support_id.name not in ayudantes">
+                                            <thread>
+                                                <t t-set='ayudantes' t-value="ayudantes +','+line.support_id.name"/>
+                                            </thread>
+                                            <a> <span t-field="line.support_id.name"/> / </a>
+                                        </span>
+                                    </t>
                                 </td>
                             </tr>
                         </table>
