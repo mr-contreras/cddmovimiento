@@ -4,6 +4,7 @@ from odoo import models, fields, api
 from odoo.exceptions import ValidationError
 from datetime import timedelta, date
 import logging
+import pytz
 
 _logger = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ class projectBinacle(models.Model):
     parent_id = fields.Many2one('project.task', string='Proyecto', required=True, ondelete='cascade', index=True,
                                 copy=False, auto_join=True, )
     product_id = fields.Many2one('product.product', string='Producto', required=True, ondelete='cascade', index=True,
-                                 copy=False,)
+                                 copy=False, )
     description = fields.Char('Descripción', related='product_id.name')
     date_init = fields.Datetime('Fecha hora inicio')
     date_end = fields.Datetime('Fecha hora final')
@@ -52,10 +53,10 @@ class projectBinacle(models.Model):
     comment = fields.Char('Comentario')
     pre_parent_id = fields.Many2one('project.task', string='pre_parent')
     parent_id_int = fields.Integer(' ')
-    
+
     available_product_ids = fields.Many2many('product.product', compute='_compute_available_product_ids')
-    
-    @api.depends('available_product_ids','product_id')
+
+    @api.depends('available_product_ids', 'product_id')
     def _compute_available_product_ids(self):
         for rec in self:
             order_id = rec.env['sale.order'].browse(rec._context.get('active_id'))
@@ -67,10 +68,10 @@ class projectBinacle(models.Model):
                 _logger.warning(task.project_sale_order_id)
                 _logger.warning('****************** TAKSK ******************')
                 _logger.warning('****************** TAKSK ******************')
-                
-                order_id = rec.env['sale.order'].search([('tasks_ids','in',task.id)], limit=1)
+
+                order_id = rec.env['sale.order'].search([('tasks_ids', 'in', task.id)], limit=1)
             res = order_id.order_line.mapped('product_id')
-            #raise ValidationError('res -- ---------------- %s ----- %s ---->>'%(res, rec._context))1
+            # raise ValidationError('res -- ---------------- %s ----- %s ---->>'%(res, rec._context))1
             _logger.warning('productos disponibles -------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
             _logger.warning('productos disponibles -------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
             _logger.warning('productos disponibles -------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
@@ -82,9 +83,9 @@ class projectBinacle(models.Model):
             _logger.warning('productos disponibles -------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
             _logger.warning('productos disponibles -------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
             _logger.warning('productos disponibles -------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
-            #print(op)
+            # print(op)
             rec.available_product_ids = res
-        
+
     @api.depends('date_init', 'date_end', 'delta')
     def _compute_delta(self):
         for rec in self:
@@ -104,8 +105,7 @@ class projectTask(models.Model):
 
     start_date_w = fields.Date(string="Start Date")
     end_date_w = fields.Date(string="End Date")
-    
-    
+
     binacle_ids = fields.One2many('project.binacle', 'parent_id', string='Bitacora')
     model_fleet_id = fields.Many2one('fleet.vehicle.model', string='Modelo/Grua')
     vehicle_id = fields.Many2one('fleet.vehicle', string='Grua')
@@ -135,21 +135,21 @@ class projectTask(models.Model):
     ], 'Hourmeter Unit', default='hours', help='Unit of the hourmeter', required=True)
 
     def reset_binacle_ids(self):
-#         return
+        #         return
         self.end_date_w = False
         self.start_date_w = False
-    
+
     def get_binacle_ids(self):
-        
-#         raise ValidationError('---------------------------------inactivo. %s %s' %(self.start_date_w , self.end_date_w))
-#         print(op555)
-        
+
         if self.start_date_w and self.end_date_w:
-#             print(op666)
-            return self.binacle_ids.filtered(lambda l: self.start_date_w >= l.date_init.date() and self.end_date_w <= l.date_init.date())
-        else: 
+            user_tz = self.env.user.tz or pytz.utc
+
+            return self.binacle_ids.filtered(
+                lambda l: self.start_date_w <= (
+                    l.date_init.astimezone(pytz.timezone(user_tz))).date() <= self.end_date_w)
+        else:
             return self.binacle_ids
-        
+
     def action_report_domain(self):
         return {
             'name': 'Reporte diario',
@@ -159,9 +159,7 @@ class projectTask(models.Model):
             'view_mode': 'form',
             'target': 'new',
         }
-    
-    
-    
+
     @api.model
     def create(self, vals):
         result = super(projectTask, self).create(vals)
@@ -193,11 +191,11 @@ class projectTask(models.Model):
         for line in self.binacle_ids:
             res = sum(self.binacle_ids.filtered(lambda x: x.product_id == line.product_id).mapped('delta'))
 
-            # raise ValidationError('%s , %s '%(res, line.product_id.minimum_quantity))
-
-            if res > line.product_id.minimum_quantity:
+            if res > sum(self.sale_order_id.order_line.filtered(lambda x: x.product_id == line.product_id).mapped(
+                    'product_uom_qty')):
                 raise ValidationError(
-                    'El registro de horas no puede ser mayor a las horas planeadas si se necesitan más horas, el administrador deberá agregar horas a la cotización.')
+                    'El registro de horas no puede ser mayor a las horas cotizadas si se necesitan más horas, '
+                    'el administrador deberá agregar horas a la cotización.')
 
     def action_fsm_validate(self):
         super().action_fsm_validate()
@@ -239,7 +237,6 @@ class projectTask(models.Model):
 
         self.timesheet_ids = timesheet_ids
 
-    
     # @api.model
     # def default_get(self, fields):
     #   res = super(projectTask, self).default_get(fields)

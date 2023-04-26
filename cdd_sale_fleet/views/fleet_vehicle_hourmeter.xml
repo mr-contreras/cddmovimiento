@@ -7,9 +7,21 @@
         <field name="inherit_id" ref="fleet.fleet_vehicle_view_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='vin_sn']" position="after">
+                <label for="total_hourmeter" attrs="{'invisible': [('vehicle_type', '!=', 'car')]}"/>
+                <div class="o_row" attrs="{'invisible': [('vehicle_type', '!=', 'car')]}">
+                    <field name="total_hourmeter" widget="float_time"/>
+                    <field name="start_hourmeter_unit"/>
+                </div>
+                
                 <label for="start_hourmeter" attrs="{'invisible': [('vehicle_type', '!=', 'car')]}"/>
                 <div class="o_row" attrs="{'invisible': [('vehicle_type', '!=', 'car')]}">
                     <field name="start_hourmeter" widget="float_time"/>
+                    <field name="start_hourmeter_unit"/>
+                </div>
+                
+                <label for="ultimate_service" attrs="{'invisible': [('vehicle_type', '!=', 'car')]}"/>
+                <div class="o_row" attrs="{'invisible': [('vehicle_type', '!=', 'car')]}">
+                    <field name="ultimate_service" widget="float_time"/>
                     <field name="start_hourmeter_unit"/>
                 </div>
             </xpath>
@@ -23,6 +35,16 @@
                     attrs="{'invisible': [('vehicle_type', '!=', 'car')]}">
                     <field name="hourmeter_count" widget="statinfo" string="Hourmeter"/>
                 </button>
+                <button name="return_action_to_open_hourmeter"
+                    type="object"
+                    class="oe_stat_button"
+                    icon="fa-spinner">
+                    <field name="hourmeter_count" widget="statinfo" string="Notificaciones"/>
+                </button>
+                
+            </xpath>
+            <xpath expr="//field[@name='company_id']" position="before">
+                <field name="fleet_services_config_id"/>
             </xpath>
 
         </field>

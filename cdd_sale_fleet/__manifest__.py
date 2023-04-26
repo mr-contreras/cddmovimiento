@@ -24,12 +24,17 @@
     # always loaded
     'data': [
         'security/ir.model.access.csv',
+        'data/data.xml',
+        'data/email_template.xml',
         'views/fleet_vehicle_hourmeter.xml',
         'views/hr_employee.xml',
         'views/project_task.xml',
         'views/sale_order.xml',
+        'views/account_move.xml',
         'views/view_task_form2_inherited.xml',
-        'views/view_task_form2_inherited.xml',
+        'views/fleet_services_config_view.xml',
+        'views/fleet_vehicle_log_service_inh.xml',
+        # 'views/res_partner_inh.xml',
         'report/sale_order_report.xml',
         'wizard/dayli_operations_report.xml',
     ],
