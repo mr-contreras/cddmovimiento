@@ -8,5 +8,5 @@ _logger = logging.getLogger(__name__)
 class AccountMove(models.Model):
     _inherit = 'account.move'
 
-    nombre_pozo = fields.Char("Nombre Pozo", required=True)
+    nombre_pozo = fields.Char("Nombre Pozo")
 
