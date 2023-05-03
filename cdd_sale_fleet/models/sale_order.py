@@ -39,7 +39,7 @@ class SaleOrder(models.Model):
     def get_report_name(self):
         for rec in self:
             # str (datetime.strptime(str(datetime.now().time()), "%Y-%m-%d"))
-            rec.report_name = 'Resumen de actividades' + ' ' + str(datetime.strftime(datetime.now().date(), '%Y-%m-%d'))
+            rec.report_name = 'Resumen de actividades' + ' ' + str(datetime.strftime(datetime.now().date(), '%Y%m%d'))
 
     def write(self, vals):
         result = super(SaleOrder, self).write(vals)

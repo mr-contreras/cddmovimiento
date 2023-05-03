@@ -119,7 +119,8 @@ class projectTask(models.Model):
         ('miles', 'mi')
     ], 'Odometer Unit', default='kilometers', help='Unit of the odometer ', required=True)
 
-    end_odometer = fields.Float(string='End Odometer', help='Odometer measure of the vehicle at the moment of this log')
+    end_odometer = fields.Float(string='End Odometer', help='Odometer measure of the vehicle at the moment of this log',
+                                compute='_calculate_end_odometer')
     end_odometer_unit = fields.Selection([
         ('miles', 'mi')
     ], 'Odometer Unit', default='miles', help='Unit of the odometer ', required=True)
@@ -130,8 +131,9 @@ class projectTask(models.Model):
         ('hours', 'hrs'),
     ], 'hourmeter Unit', default='hours', help='Unit of the hourmeter ', required=True)
 
-    end_hourmeter = fields.Float(string='End Horometer',
-                                 help='horometer measure of the vehicle at the moment of this log')
+    end_hourmeter = fields.Float(string='End Hourmeter',
+                                 help='horometer measure of the vehicle at the moment of this log',
+                                 compute='_calculate_end_hourmeter')
     end_hourmeter_unit = fields.Selection([
         ('hours', 'hrs'),
     ], 'Hourmeter Unit', default='hours', help='Unit of the hourmeter', required=True)
@@ -253,6 +255,14 @@ class projectTask(models.Model):
         self.accumulated_hourmeter = 0
         for line in self.binacle_ids:
             self.accumulated_hourmeter += line.hourmeter
+
+    @api.depends('accumulated_hourmeter')
+    def _calculate_end_hourmeter(self):
+        self.end_hourmeter = self.start_hourmeter + self.accumulated_hourmeter
+
+    @api.depends('accumulated_odometer')
+    def _calculate_end_odometer(self):
+        self.end_odometer = self.start_odometer + self.accumulated_odometer
 
     # @api.model
     # def default_get(self, fields):

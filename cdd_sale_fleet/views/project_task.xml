@@ -46,16 +46,17 @@
                     <field name="start_odometer" readonly="True" force_save="1"/>
                     <field name="start_odometer_unit" readonly="True" force_save="1"/>
                 </div>
-                <label for="end_odometer" />
-                <div class="o_row">
-                    <field name="end_odometer"/>
-                    <field name="end_odometer_unit"/>
-                </div>
                 <label for="accumulated_odometer" />
                 <div class="o_row">
                     <field name="accumulated_odometer" readonly="True"/>
+                    <field name="start_odometer_unit" readonly="True" force_save="1"/>
                 </div>
-                
+                <label for="end_odometer" />
+                <div class="o_row">
+                    <field name="end_odometer" readonly="True"/>
+                    <field name="end_odometer_unit"/>
+                </div>
+
                 <separator string="Hourmeter Info" colspan="4" />
 
                 <label for="start_hourmeter"/>
@@ -63,14 +64,15 @@
                     <field name="start_hourmeter" widget="float_time" readonly="True" force_save="1"/>
                     <field name="start_hourmeter_unit" readonly="True" force_save="1"/>
                 </div>  
-                <label for="end_hourmeter" />
-                <div class="o_row">
-                    <field name="end_hourmeter" widget="float_time"/>
-                    <field name="end_hourmeter_unit"/>
-                </div>
                 <label for="accumulated_hourmeter" />
                 <div class="o_row">
                     <field name="accumulated_hourmeter" widget='float_time' readonly="True"/>
+                    <field name="start_hourmeter_unit" readonly="True" force_save="1"/>
+                </div>
+                <label for="end_hourmeter" />
+                <div class="o_row">
+                    <field name="end_hourmeter" readonly="True" widget="float_time"/>
+                    <field name="end_hourmeter_unit"/>
                 </div>
             </xpath>
         </field>
