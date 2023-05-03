@@ -53,6 +53,8 @@ class projectBinacle(models.Model):
     comment = fields.Char('Comentario')
     pre_parent_id = fields.Many2one('project.task', string='pre_parent')
     parent_id_int = fields.Integer(' ')
+    odometer = fields.Integer('Odometro')
+    hourmeter = fields.Integer('Horometro')
 
     available_product_ids = fields.Many2many('product.product', compute='_compute_available_product_ids')
 
@@ -133,6 +135,9 @@ class projectTask(models.Model):
     end_hourmeter_unit = fields.Selection([
         ('hours', 'hrs'),
     ], 'Hourmeter Unit', default='hours', help='Unit of the hourmeter', required=True)
+
+    accumulated_odometer = fields.Float(string='Odometro acumulado', compute='_calculate_odometer')
+    accumulated_hourmeter = fields.Float(string='Horometro acumulado', compute='_calculate_hourmeter')
 
     def reset_binacle_ids(self):
         #         return
@@ -236,6 +241,18 @@ class projectTask(models.Model):
         self.vehicle_id.write({'odometer': self.end_odometer, 'odometer_unit': self.end_odometer_unit})
 
         self.timesheet_ids = timesheet_ids
+
+    @api.depends('binacle_ids.odometer')
+    def _calculate_odometer(self):
+        self.accumulated_odometer = 0
+        for line in self.binacle_ids:
+            self.accumulated_odometer += line.odometer
+
+    @api.depends('binacle_ids.hourmeter')
+    def _calculate_hourmeter(self):
+        self.accumulated_hourmeter = 0
+        for line in self.binacle_ids:
+            self.accumulated_hourmeter += line.hourmeter
 
     # @api.model
     # def default_get(self, fields):
