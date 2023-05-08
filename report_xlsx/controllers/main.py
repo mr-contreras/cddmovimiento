@@ -4,6 +4,7 @@
 
 import json
 import logging
+import datetime
 
 from werkzeug.urls import url_decode
 
@@ -55,6 +56,7 @@ class ReportController(report.ReportController):
         try:
             if report_type == "xlsx":
                 reportname = url.split("/report/xlsx/")[1].split("?")[0]
+                _logger.info("Nombre de reporte %s", reportname)
                 docids = None
                 if "/" in reportname:
                     reportname, docids = reportname.split("/")
@@ -80,7 +82,7 @@ class ReportController(report.ReportController):
                 report = request.env["ir.actions.report"]._get_report_from_name(
                     reportname
                 )
-                filename = "%s.%s" % (report.name, "xlsx")
+                filename = "%s%s.%s" % ("Resumen de actividades", datetime.datetime.now().strftime('%Y%m%d'), "xlsx")
 
                 if docids:
                     ids = [int(x) for x in docids.split(",")]

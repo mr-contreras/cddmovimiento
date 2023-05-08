@@ -1,4 +1,10 @@
+import json
 import logging
+from odoo import api, fields, models, tools, _
+from odoo.addons import decimal_precision as dp
+from odoo.exceptions import UserError, ValidationError
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 _logger = logging.getLogger(__name__)
 
 try:
@@ -7,26 +13,16 @@ except ImportError:
     _logger.debug('Can not import xlsxwriter`.')
 
 
-
-
-from odoo import api, fields, models, tools, _
-from odoo.addons import decimal_precision as dp
-from odoo.exceptions import UserError, ValidationError
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
-
 class projectTaskXlsx(models.AbstractModel):
     _name = 'report.project.task.xlsx'
     _inherit = 'report.report_xlsx.abstract'
-    
-    
+
     def generate_xlsx_report(self, workbook, data, obj):
-        
-        
+
         sheet = workbook.add_worksheet('')
         bold = workbook.add_format({'bold': True})
         
-        textWrap_header = workbook.add_format({'text_wrap':'true', 'border': 1, 'valign': 'vcenter','bold': True,})
+        textWrap_header = workbook.add_format({'text_wrap':'true', 'border': 1, 'valign': 'vcenter', 'bold': True,})
         textWrap = workbook.add_format({'text_wrap':'true', 'border': 1, 'valign': 'top'})
         textWrap_table = workbook.add_format({'text_wrap':'true'})
         floating_point_bordered = workbook.add_format({'num_format': '#,##0.00', 'border': 1,'valign': 'top'})
@@ -99,12 +95,53 @@ class projectTaskXlsx(models.AbstractModel):
         
         sheet.write(y_title, 19, 'Ayudante Grua',bold_center_border)
         sheet.write(y_title, 20, 'Horas Generadas',bold_center_border)
+
+        if data:
+            options = json.loads(data['options'])
+            if options['date_filtered_init']:
+                options['date_filtered_init'] = datetime.strptime(options['date_filtered_init'], '%Y-%m-%d %H:%M:%S')
+            if options['date_filtered_end']:
+                options['date_filtered_end'] = datetime.strptime(options['date_filtered_end'], '%Y-%m-%d %H:%M:%S')
+
+            if options['type_filtered'] == 'state':
+                objs = self.env['sale.order'].search([
+                    '&', ('active_task', '=', True), ('state', '=', options['state'])
+                ])
+            elif options['type_filtered'] == 'uni_eco':
+                _logger.info("Unidad: %s", options['vehicle_id'])
+                objs = self.env['sale.order'].search([
+                    '&', ('active_task', '=', True), ('vehicle_id', '=', options['vehicle_id'])
+                ])
+            elif options['type_filtered'] == 'date_create':
+                objs = self.env['sale.order'].search([
+                    '&', '&', ('active_task', '=', True),
+                    ('date_order', '>', options['date_filtered_init']),
+                    ('date_order', '<', options['date_filtered_end'])
+                ])
+            elif options['type_filtered'] == 'date_ejec':
+                objs = self.env['sale.order'].search([
+                    '&', '&', ('active_task', '=', True),
+                    ('task_date_last_stage_update', '>', options['date_filtered_init']),
+                    ('task_date_last_stage_update', '<', options['date_filtered_end'])
+                ])
+            elif options['type_filtered'] == 'all':
+                objs = self.env['sale.order'].search([
+                    ('active_task', '=', True)
+                ])
+
+
+
+        #for rec in objs_n:
+        #    sheet.write(y_title, i, len(objs_n.tasks_ids),bold_center_border)
+        #    i = i+1
+
         y_title+=1
                 
         for rec in objs_n.sorted(lambda x: x.name , reverse = True):
                 
             #grueros = rec.tasks_ids[0].user_ids.filtered(lambda x : x.type_employee == 'gruero').mapped('name')
-            
+
+            #rec.tasks_ids = rec.tasks_ids.filtered(lambda task: task.active)
             
             
             
@@ -141,8 +178,14 @@ class projectTaskXlsx(models.AbstractModel):
                         sheet.write(y_title, 2, rec.partner_id.name,textWrap_table)
                         sheet.write(y_title, 3, rec.tasks_ids[0].partner_id.x_studio_ubicacin if rec.tasks_ids else '',textWrap_table)
                         if rec.tasks_ids and rec.tasks_ids[0].binacle_ids:
-                            sheet.write(y_title, 4, rec.get_date_init(line).strftime('%d-%m-%Y %H:%M:%S') ,textWrap_table)
-                            sheet.write(y_title, 5, rec.get_date_end(line).strftime('%d-%m-%Y %H:%M:%S'),textWrap_table)
+                            sheet.write(y_title, 4,
+                                        rec.get_date_init(line).strftime('%d-%m-%Y %H:%M:%S')
+                                        if rec.get_date_init(line) else "",
+                                        textWrap_table)
+                            sheet.write(y_title, 5,
+                                        rec.get_date_end(line).strftime('%d-%m-%Y %H:%M:%S')
+                                        if rec.get_date_end(line) else "",
+                                        textWrap_table)
 
                         else:
                             sheet.write(y_title, 4, 'Sin bitacora' ,textWrap_table)
@@ -200,8 +243,14 @@ class projectTaskXlsx(models.AbstractModel):
                         sheet.write(y_title, 2, rec.partner_id.name,textWrap_table)
                         sheet.write(y_title, 3, rec.tasks_ids[0].partner_id.x_studio_ubicacin if rec.tasks_ids else '',textWrap_table)
                         if rec.tasks_ids and rec.tasks_ids[0].binacle_ids:
-                            sheet.write(y_title, 4, rec.get_date_init(line).strftime('%d-%m-%Y %H:%M:%S') ,textWrap_table)
-                            sheet.write(y_title, 5, rec.get_date_end(line).strftime('%d-%m-%Y %H:%M:%S'),textWrap_table)
+                            sheet.write(y_title, 4,
+                                        rec.get_date_init(line).strftime('%d-%m-%Y %H:%M:%S')
+                                        if rec.get_date_init(line) else "",
+                                        textWrap_table)
+                            sheet.write(y_title, 5,
+                                        rec.get_date_end(line).strftime('%d-%m-%Y %H:%M:%S')
+                                        if rec.get_date_end(line) else "",
+                                        textWrap_table)
 
                         else:
                             sheet.write(y_title, 4, 'Sin bitacora' ,textWrap_table)
@@ -260,8 +309,14 @@ class projectTaskXlsx(models.AbstractModel):
                         sheet.write(y_title, 2, rec.partner_id.name,textWrap_table)
                         sheet.write(y_title, 3, rec.tasks_ids[0].partner_id.x_studio_ubicacin if rec.tasks_ids else '',textWrap_table)
                         if rec.tasks_ids and rec.tasks_ids[0].binacle_ids:
-                            sheet.write(y_title, 4, rec.get_date_init(line).strftime('%d-%m-%Y %H:%M:%S') ,textWrap_table)
-                            sheet.write(y_title, 5, rec.get_date_end(line).strftime('%d-%m-%Y %H:%M:%S'),textWrap_table)
+                            sheet.write(y_title, 4,
+                                        rec.get_date_init(line).strftime('%d-%m-%Y %H:%M:%S')
+                                        if rec.get_date_init(line) else "",
+                                        textWrap_table)
+                            sheet.write(y_title, 5,
+                                        rec.get_date_end(line).strftime('%d-%m-%Y %H:%M:%S')
+                                        if rec.get_date_end(line) else "",
+                                        textWrap_table)
 
                         else:
                             sheet.write(y_title, 4, 'Sin bitacora' ,textWrap_table)
@@ -290,7 +345,8 @@ class projectTaskXlsx(models.AbstractModel):
                                                          #             filter date_ejec ====================================
             
             if objs_n.sorted(key=lambda r: r.id)[0].type_filtered == 'date_ejec':
-                if rec.tasks_ids[0].date_last_stage_update >=  objs_n.sorted(key=lambda r: r.id)[0].date_filtered_wizard_init and rec.tasks_ids[0].date_last_stage_update <= objs_n.sorted(key=lambda r: r.id)[0].date_filtered_wizard_end:
+
+                if rec.task_ids[0] and rec.tasks_ids[0].date_last_stage_update >= objs_n.sorted(key=lambda r: r.id)[0].date_filtered_wizard_init and rec.tasks_ids[0].date_last_stage_update <= objs_n.sorted(key=lambda r: r.id)[0].date_filtered_wizard_end:
             
                     str_grueros = ''
                     if rec.tasks_ids:
@@ -321,8 +377,14 @@ class projectTaskXlsx(models.AbstractModel):
                         sheet.write(y_title, 3, rec.tasks_ids[0].partner_id.x_studio_ubicacin if rec.tasks_ids else '',textWrap_table)
                         
                         if rec.tasks_ids and rec.tasks_ids[0].binacle_ids:
-                            sheet.write(y_title, 4, rec.get_date_init(line).strftime('%d-%m-%Y %H:%M:%S') ,textWrap_table)
-                            sheet.write(y_title, 5, rec.get_date_end(line).strftime('%d-%m-%Y %H:%M:%S'),textWrap_table)
+                            sheet.write(y_title, 4,
+                                        rec.get_date_init(line).strftime('%d-%m-%Y %H:%M:%S')
+                                        if rec.get_date_init(line) else "",
+                                        textWrap_table)
+                            sheet.write(y_title, 5,
+                                        rec.get_date_end(line).strftime('%d-%m-%Y %H:%M:%S')
+                                        if rec.get_date_end(line) else "",
+                                        textWrap_table)
                         
                         else:
                             sheet.write(y_title, 4, 'Sin bitacora' ,textWrap_table)
@@ -380,13 +442,14 @@ class projectTaskXlsx(models.AbstractModel):
                     sheet.write(y_title, 2, rec.partner_id.name,textWrap_table)
                     sheet.write(y_title, 3, rec.tasks_ids[0].partner_id.x_studio_ubicacin if rec.tasks_ids else '' ,textWrap_table)
                     if rec.tasks_ids and rec.tasks_ids[0].binacle_ids:
-                        sheet.write(y_title, 4, rec.get_date_init(line).strftime('%d-%m-%Y %H:%M:%S') ,textWrap_table)
-                        sheet.write(y_title, 5, rec.get_date_end(line).strftime('%d-%m-%Y %H:%M:%S'),textWrap_table)
+                        sheet.write(y_title, 4,
+                                    rec.get_date_init(line).strftime('%d-%m-%Y %H:%M:%S') if rec.get_date_init(line) else '',textWrap_table)
+                        sheet.write(y_title, 5,
+                                    rec.get_date_end(line).strftime('%d-%m-%Y %H:%M:%S') if rec.get_date_end(line) else '',textWrap_table)
 
                     else:
                         sheet.write(y_title, 4, 'Sin bitacora' ,textWrap_table)
                         sheet.write(y_title, 5, 'Sin bitacora' ,textWrap_table)
-                    
                     
                     sheet.write(y_title, 6, rec.get_days_total(line) if rec.tasks_ids else '' ,textWrap_table)
                     sheet.write(y_title, 7, rec.get_total_hours(line) if rec.tasks_ids else '' ,textWrap_table)
@@ -406,3 +469,69 @@ class projectTaskXlsx(models.AbstractModel):
                     sheet.write(y_title, 19, str_grueros if rec.tasks_ids else '',textWrap_table)
                     sheet.write(y_title, 20, line.product_id.minimum_quantity,textWrap_table)
                     y_title+=1
+
+        y_title += 3
+        for rec in objs.sorted(lambda x: x.name, reverse=True):
+            str_grueros = ''
+            if rec.tasks_ids:
+                grueros_array = rec.tasks_ids[0].user_ids.mapped('name')
+                for i in grueros_array:
+                    str_grueros += (i + ' , ')
+
+            payment_state = 'Sin Facturar'
+            if rec.invoice_ids:
+                if rec.invoice_ids[0].payment_state == 'not_paid':
+                    payment_state = 'Sin pagar'
+                elif rec.invoice_ids[0].payment_state == 'in_payment':
+                    payment_state = 'En Proceso de Pago'
+                elif rec.invoice_ids[0].payment_state == 'paid':
+                    payment_state = 'Pagado'
+                elif rec.invoice_ids[0].payment_state == 'partial':
+                    payment_state = 'Pagado Parcialmente'
+                elif rec.invoice_ids[0].payment_state == 'reversed':
+                    payment_state = 'Revertido'
+                elif rec.invoice_ids[0].payment_state == 'invoicing_legacy':
+                    payment_state = 'Sistema anterior de facturacion'
+                # ayudantes = rec.tasks_ids[0].user_ids.filtered(lambda x : x.type_employee == 'support').mapped('name')
+
+            for line in rec.order_line:
+
+                sheet.write(y_title, 0, rec.name, textWrap_table)
+                sheet.write(y_title, 1, rec.tasks_ids[0].vehicle_id.x_studio_numero_economico if rec.tasks_ids else '',
+                            textWrap_table)
+                sheet.write(y_title, 2, rec.partner_id.name, textWrap_table)
+                sheet.write(y_title, 3, rec.tasks_ids[0].partner_id.x_studio_ubicacin if rec.tasks_ids else '',
+                            textWrap_table)
+                if rec.tasks_ids and rec.tasks_ids[0].binacle_ids:
+                    sheet.write(y_title, 4,
+                                rec.get_date_init(line).strftime('%d-%m-%Y %H:%M:%S')
+                                if rec.get_date_init(line) else "",
+                                textWrap_table)
+                    sheet.write(y_title, 5,
+                                rec.get_date_end(line).strftime('%d-%m-%Y %H:%M:%S')
+                                if rec.get_date_end(line) else "",
+                                textWrap_table)
+
+                else:
+                    sheet.write(y_title, 4, 'Sin bitacora', textWrap_table)
+                    sheet.write(y_title, 5, 'Sin bitacora', textWrap_table)
+                sheet.write(y_title, 6, rec.get_days_total(line) if rec.tasks_ids else '', textWrap_table)
+
+                sheet.write(y_title, 7, rec.get_total_hours(line) if rec.tasks_ids else '', textWrap_table)
+                sheet.write(y_title, 8, line.name, textWrap_table)
+                sheet.write(y_title, 9, line.price_unit, textWrap_table)
+                sheet.write(y_title, 10, line.product_uom_qty, textWrap_table)
+                sheet.write(y_title, 11, line.price_subtotal, textWrap_table)
+                sheet.write(y_title, 12, line.price_tax, textWrap_table)
+
+                sheet.write(y_title, 13, (line.price_subtotal + line.price_tax), textWrap_table)
+                sheet.write(y_title, 14, payment_state, textWrap_table)
+                sheet.write(y_title, 15, rec.state, textWrap_table)
+                sheet.write(y_title, 16, rec.tasks_ids[0].stage_id.name if rec.tasks_ids else '', textWrap_table)
+                sheet.write(y_title, 17, str_grueros if rec.tasks_ids else '', textWrap_table)
+                sheet.write(y_title, 18, '', textWrap_table)
+
+                sheet.write(y_title, 19, str_grueros if rec.tasks_ids else '', textWrap_table)
+                sheet.write(y_title, 20, line.product_id.minimum_quantity, textWrap_table)
+                y_title += 1
+

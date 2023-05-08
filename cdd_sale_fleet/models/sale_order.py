@@ -36,6 +36,76 @@ class SaleOrder(models.Model):
     date_filtered_wizard_init = fields.Datetime('Desde')
     date_filtered_wizard_end = fields.Datetime('Hasta')
 
+    active_task = fields.Boolean(string='Activo', compute='_has_active_task', search='_search_active_task')
+    vehicle_id = vehicle_id = fields.Many2one('fleet.vehicle', string='Grua', compute='_compute_vehicle_id',
+                                              search='_search_vehicle_id')
+    task_date_last_stage_update = fields.Datetime(compute='_compute_date_last_stage_update',
+                                                  search='_search_date_last_stage_update')
+
+    @api.depends('tasks_ids', 'tasks_ids.active')
+    def _has_active_task(self):
+        self.active_task = False
+        for task in self.tasks_ids:
+            self.active_task = self.active_task or tasks_ids.active;
+
+    @api.depends('tasks_ids', 'tasks_ids.vehicle_id')
+    def _compute_vehicle_id(self):
+        for task in self.tasks_ids:
+            self.vehicle_id = task.vehicle_id
+
+    @api.depends('tasks_ids', 'tasks_ids.date_last_stage_update')
+    def _compute_date_last_stage_update(self):
+        max_date = false
+        for task in self.tasks_ids:
+            if not max_date:
+                max_date = task.date_last_stage_update
+            elif max_date < task.date_last_stage_update:
+                max_date = task.date_last_stage_update
+        if max_date:
+            self.task_date_last_stage_update = max_date
+
+    def _search_date_last_stage_update(self, operator, value):
+        for task in self.tasks_ids:
+            if operator == '=' and task.date_last_stage_update == value:
+                return [('id', '=', self.id)]
+            if operator == '<' and task.date_last_stage_update < value:
+                return [('id', '=', self.id)]
+            if operator == '<=' and task.date_last_stage_update <= value:
+                return [('id', '=', self.id)]
+            if operator == '>' and task.date_last_stage_update <= value:
+                return [('id', '=', self.id)]
+            if operator == '<=' and task.date_last_stage_update >= value:
+                return [('id', '=', self.id)]
+            else:
+                return [('id', '=', -1)]
+
+    def _search_active_task(self, operator, value):
+        if operator == '=':
+            orders = self.env['sale.order'].search([('id', '>', 0)])
+            ids = []
+            for order in orders:
+                for task in order.tasks_ids:
+                    if task.active:
+                        ids.append(order.id)
+                        continue
+            return [('id', 'in', ids)]
+        return False
+
+    def _search_vehicle_id(self, operator, value):
+        _logger.info('Buscand %s, %s', operator, value)
+        if operator == '=':
+            orders = self.env['sale.order'].search([('id', '>', 0)])
+            ids = [-1]
+            for order in orders:
+                for task in order.tasks_ids:
+                    _logger.info('order %s, vehicle %s', order.name, task.vehicle_id.name)
+                    if task.vehicle_id.id == value:
+                        ids.append(order.id)
+                    continue
+            _logger.info('ids = %s', ids)
+            return [('id', 'in', ids)]
+        return False
+
     def get_report_name(self):
         for rec in self:
             # str (datetime.strptime(str(datetime.now().time()), "%Y-%m-%d"))
@@ -69,21 +139,21 @@ class SaleOrder(models.Model):
         return str_grueros
 
     def get_date_init(self, line):
-        if self.tasks_ids[0] and self.tasks_ids[0].binacle_ids:
+        if self.tasks_ids[0] and self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line.product_id.id):
             return self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line.product_id.id).sorted(
                 key=lambda r: r.date_init)[0].date_init - timedelta(hours=6)
         else:
             return False
 
     def get_date_end(self, line):
-        if self.tasks_ids[0] and self.tasks_ids[0].binacle_ids:
+        if self.tasks_ids[0] and self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line.product_id.id):
             return self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line.product_id.id).sorted(
                 key=lambda r: r.date_end)[-1].date_end - timedelta(hours=6)
         else:
             return False
 
     def get_days_total(self, line):
-        if self.tasks_ids[0] and self.tasks_ids[0].binacle_ids:
+        if self.tasks_ids[0] and self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line.product_id.id):
             init = self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line.product_id.id).sorted(
                 key=lambda r: r.date_init)[0].date_init - timedelta(hours=6)
             end = self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line.product_id.id).sorted(
