@@ -65,40 +65,40 @@ class SaleOrder(models.Model):
             self.task_date_last_stage_update = max_date
 
     def _search_date_last_stage_update(self, operator, value):
-        for task in self.tasks_ids:
-            if operator == '=' and task.date_last_stage_update == value:
-                return [('id', '=', self.id)]
-            if operator == '<' and task.date_last_stage_update < value:
-                return [('id', '=', self.id)]
-            if operator == '<=' and task.date_last_stage_update <= value:
-                return [('id', '=', self.id)]
-            if operator == '>' and task.date_last_stage_update <= value:
-                return [('id', '=', self.id)]
-            if operator == '<=' and task.date_last_stage_update >= value:
-                return [('id', '=', self.id)]
-            else:
-                return [('id', '=', -1)]
+        orders = self.env['sale.order'].search([('id', '>', 0)])
+        ids = [-1]
+        for order in orders:
+            for task in order.tasks_ids:
+                if operator == '=' and task.date_last_stage_update == value:
+                    ids.append(order.id)
+                if operator == '<' and task.date_last_stage_update < value:
+                    ids.append(order.id)
+                if operator == '<=' and task.date_last_stage_update <= value:
+                    ids.append(order.id)
+                if operator == '>' and task.date_last_stage_update <= value:
+                    ids.append(order.id)
+                if operator == '<=' and task.date_last_stage_update >= value:
+                    ids.append(order.id)
+        return [('id', 'in', ids)]
 
     def _search_active_task(self, operator, value):
         if operator == '=':
             orders = self.env['sale.order'].search([('id', '>', 0)])
-            ids = []
+            ids = [-1]
             for order in orders:
                 for task in order.tasks_ids:
-                    if task.active:
+                    if task.active == value:
                         ids.append(order.id)
                         continue
             return [('id', 'in', ids)]
         return False
 
     def _search_vehicle_id(self, operator, value):
-        _logger.info('Buscand %s, %s', operator, value)
         if operator == '=':
             orders = self.env['sale.order'].search([('id', '>', 0)])
             ids = [-1]
             for order in orders:
                 for task in order.tasks_ids:
-                    _logger.info('order %s, vehicle %s', order.name, task.vehicle_id.name)
                     if task.vehicle_id.id == value:
                         ids.append(order.id)
                     continue

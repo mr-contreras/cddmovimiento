@@ -346,7 +346,7 @@ class projectTaskXlsx(models.AbstractModel):
             
             if objs_n.sorted(key=lambda r: r.id)[0].type_filtered == 'date_ejec':
 
-                if rec.task_ids[0] and rec.tasks_ids[0].date_last_stage_update >= objs_n.sorted(key=lambda r: r.id)[0].date_filtered_wizard_init and rec.tasks_ids[0].date_last_stage_update <= objs_n.sorted(key=lambda r: r.id)[0].date_filtered_wizard_end:
+                if rec.tasks_ids and rec.tasks_ids[0].date_last_stage_update >= objs_n.sorted(key=lambda r: r.id)[0].date_filtered_wizard_init and rec.tasks_ids[0].date_last_stage_update <= objs_n.sorted(key=lambda r: r.id)[0].date_filtered_wizard_end:
             
                     str_grueros = ''
                     if rec.tasks_ids:
