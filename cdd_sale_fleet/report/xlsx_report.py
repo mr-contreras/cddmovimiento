@@ -143,10 +143,23 @@ class projectTaskXlsx(models.AbstractModel):
         # Llenando latabla
         for rec in objs.sorted(lambda x: x.name, reverse=True):
             str_grueros = ''
+            grueros = []
+            supports = []
+            horas = 0
             if rec.tasks_ids:
                 grueros_array = rec.tasks_ids[0].user_ids.mapped('name')
                 for i in grueros_array:
                     str_grueros += (i + ' , ')
+                # _logger.info("#####################Orden: %s", rec.name)
+                for binacle in rec.tasks_ids[0].binacle_ids:
+                    # _logger.info("Biacle %s, %s, %f", binacle.gruero_id.mapped('name'), binacle.support_id.mapped('name'), binacle.delta)
+                    for gruero in binacle.gruero_id.mapped('name'):
+                        if gruero not in grueros:
+                            grueros.append(gruero)
+                    for support in binacle.support_id.mapped('name'):
+                        if support not in supports:
+                            supports.append(support)
+                    horas += binacle.delta
 
             payment_state = 'Sin Facturar'
             if rec.invoice_ids:
@@ -198,13 +211,13 @@ class projectTaskXlsx(models.AbstractModel):
                 sheet.write(y_title, 13, line.price_tax, f_table_cell_money)
 
                 sheet.write(y_title, 14, (line.price_subtotal + line.price_tax), f_table_cell_money)
-                sheet.write(y_title, 15, 'Pagado', f_table_cell_text)
+                sheet.write(y_title, 15, rec.get_paid_ammount(), f_table_cell_money)
                 sheet.write(y_title, 16, payment_state, f_table_cell_text)
                 sheet.write(y_title, 17, rec.state, f_table_cell_text)
-                sheet.write(y_title, 18, str_grueros if rec.tasks_ids else '', f_table_cell_text)
-                sheet.write(y_title, 19, 'Horas', f_table_cell_number)
+                sheet.write(y_title, 18, ", ".join(grueros) if rec.tasks_ids else '', f_table_cell_text)
+                sheet.write(y_title, 19, horas, f_table_cell_number)
 
-                sheet.write(y_title, 20, str_grueros if rec.tasks_ids else '', f_table_cell_text)
-                sheet.write(y_title, 21, 'Horas', f_table_cell_number)
+                sheet.write(y_title, 20, ", ".join(supports) if rec.tasks_ids else '', f_table_cell_text)
+                sheet.write(y_title, 21, horas, f_table_cell_number)
                 y_title += 1
 

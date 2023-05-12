@@ -44,40 +44,33 @@ class SaleOrder(models.Model):
 
     @api.depends('tasks_ids', 'tasks_ids.active')
     def _has_active_task(self):
-        self.active_task = False
-        for task in self.tasks_ids:
-            self.active_task = self.active_task or tasks_ids.active;
+        if self.tasks_ids:
+            self.active_task = tasks_ids[0].active;
 
     @api.depends('tasks_ids', 'tasks_ids.vehicle_id')
     def _compute_vehicle_id(self):
-        for task in self.tasks_ids:
-            self.vehicle_id = task.vehicle_id
+        if self.tasks_ids:
+            self.vehicle_id = self.tasks_ids[0].vehicle_id
 
     @api.depends('tasks_ids', 'tasks_ids.date_last_stage_update')
     def _compute_date_last_stage_update(self):
-        max_date = false
-        for task in self.tasks_ids:
-            if not max_date:
-                max_date = task.date_last_stage_update
-            elif max_date < task.date_last_stage_update:
-                max_date = task.date_last_stage_update
-        if max_date:
-            self.task_date_last_stage_update = max_date
+        if self.tasks_ids:
+            self.task_date_last_stage_update = task.date_last_stage_update
 
     def _search_date_last_stage_update(self, operator, value):
         orders = self.env['sale.order'].search([('id', '>', 0)])
         ids = [-1]
         for order in orders:
-            for task in order.tasks_ids:
-                if operator == '=' and task.date_last_stage_update == value:
+            if order.tasks_ids:
+                if operator == '=' and order.tasks_ids[0].date_last_stage_update == value:
                     ids.append(order.id)
-                if operator == '<' and task.date_last_stage_update < value:
+                if operator == '<' and order.tasks_ids[0].date_last_stage_update < value:
                     ids.append(order.id)
-                if operator == '<=' and task.date_last_stage_update <= value:
+                if operator == '<=' and order.tasks_ids[0].date_last_stage_update <= value:
                     ids.append(order.id)
-                if operator == '>' and task.date_last_stage_update <= value:
+                if operator == '>' and order.tasks_ids[0].date_last_stage_update <= value:
                     ids.append(order.id)
-                if operator == '<=' and task.date_last_stage_update >= value:
+                if operator == '<=' and order.tasks_ids[0].date_last_stage_update >= value:
                     ids.append(order.id)
         return [('id', 'in', ids)]
 
@@ -86,10 +79,9 @@ class SaleOrder(models.Model):
             orders = self.env['sale.order'].search([('id', '>', 0)])
             ids = [-1]
             for order in orders:
-                for task in order.tasks_ids:
-                    if task.active == value:
+                if order.tasks_ids:
+                    if order.tasks_ids[0].active == value:
                         ids.append(order.id)
-                        continue
             return [('id', 'in', ids)]
         return False
 
@@ -98,11 +90,9 @@ class SaleOrder(models.Model):
             orders = self.env['sale.order'].search([('id', '>', 0)])
             ids = [-1]
             for order in orders:
-                for task in order.tasks_ids:
-                    if task.vehicle_id.id == value:
+                if order.tasks_ids:
+                    if order.tasks_ids[0].vehicle_id.id == value:
                         ids.append(order.id)
-                    continue
-            _logger.info('ids = %s', ids)
             return [('id', 'in', ids)]
         return False
 
@@ -186,6 +176,16 @@ class SaleOrder(models.Model):
                 payment_state = 'Sistema anterior de facturacion'
         return payment_state
 
+    def get_paid_ammount(self):
+        sum = 0
+        # _logger.info("Obuener Pago")
+        for invoice in self.invoice_ids:
+            # _logger.info("invoice Total: %f", invoice.amount_total)
+            # _logger.info("invoice : %f", invoice.amount_total)
+            sum += abs(invoice.amount_total - invoice.amount_residual)
+        return sum
+
+    def _prepare_invoice(self):
     def _prepare_invoice(self):
         invoice_vals = super(SaleOrder, self)._prepare_invoice()
         invoice_vals['nombre_pozo'] = self.nombre_pozo
