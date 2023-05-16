@@ -1,3 +1,5 @@
+import json
+from odoo.tools import date_utils
 from odoo import fields, models, api, _
 from odoo.exceptions import UserError, ValidationError
 from datetime import datetime
@@ -77,6 +79,16 @@ class AdvancesNotAppliedWizard(models.TransientModel):
         return objs.env.ref('cdd_sale_fleet.cdd_action_report_sale_task_2').report_action(objs)
 
     def action_print_report_xlsx(self):
+
+        data = {
+            'options': json.dumps({
+                'type_filtered': self.type_filtered,
+                'state': self.state,
+                'vehicle_id': self.vehicle_id.id,
+                'date_filtered_init': self.date_filtered_init,
+                'date_filtered_end': self.date_filtered_end
+            }, default=date_utils.json_default)
+        }
         objs = self.env['sale.order'].search([
             ('id', '>', 0)
         ])
@@ -90,4 +102,4 @@ class AdvancesNotAppliedWizard(models.TransientModel):
                 'date_filtered_wizard_end': self.date_filtered_end,
             })
 
-        return self.sudo().env.ref('cdd_sale_fleet.cdd_action_report_sale_task_2_xlsx').report_action(self)
+        return self.sudo().env.ref('cdd_sale_fleet.cdd_action_report_sale_task_2_xlsx').report_action(self, data=data)

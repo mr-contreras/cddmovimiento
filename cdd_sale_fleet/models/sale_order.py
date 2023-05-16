@@ -36,6 +36,66 @@ class SaleOrder(models.Model):
     date_filtered_wizard_init = fields.Datetime('Desde')
     date_filtered_wizard_end = fields.Datetime('Hasta')
 
+    active_task = fields.Boolean(string='Activo', compute='_has_active_task', search='_search_active_task')
+    vehicle_id = vehicle_id = fields.Many2one('fleet.vehicle', string='Grua', compute='_compute_vehicle_id',
+                                              search='_search_vehicle_id')
+    task_date_last_stage_update = fields.Datetime(compute='_compute_date_last_stage_update',
+                                                  search='_search_date_last_stage_update')
+
+    @api.depends('tasks_ids', 'tasks_ids.active')
+    def _has_active_task(self):
+        if self.tasks_ids:
+            self.active_task = tasks_ids[0].active;
+
+    @api.depends('tasks_ids', 'tasks_ids.vehicle_id')
+    def _compute_vehicle_id(self):
+        if self.tasks_ids:
+            self.vehicle_id = self.tasks_ids[0].vehicle_id
+
+    @api.depends('tasks_ids', 'tasks_ids.date_last_stage_update')
+    def _compute_date_last_stage_update(self):
+        if self.tasks_ids:
+            self.task_date_last_stage_update = task.date_last_stage_update
+
+    def _search_date_last_stage_update(self, operator, value):
+        orders = self.env['sale.order'].search([('id', '>', 0)])
+        ids = [-1]
+        for order in orders:
+            if order.tasks_ids:
+                if operator == '=' and order.tasks_ids[0].date_last_stage_update == value:
+                    ids.append(order.id)
+                if operator == '<' and order.tasks_ids[0].date_last_stage_update < value:
+                    ids.append(order.id)
+                if operator == '<=' and order.tasks_ids[0].date_last_stage_update <= value:
+                    ids.append(order.id)
+                if operator == '>' and order.tasks_ids[0].date_last_stage_update <= value:
+                    ids.append(order.id)
+                if operator == '<=' and order.tasks_ids[0].date_last_stage_update >= value:
+                    ids.append(order.id)
+        return [('id', 'in', ids)]
+
+    def _search_active_task(self, operator, value):
+        if operator == '=':
+            orders = self.env['sale.order'].search([('id', '>', 0)])
+            ids = [-1]
+            for order in orders:
+                if order.tasks_ids:
+                    if order.tasks_ids[0].active == value:
+                        ids.append(order.id)
+            return [('id', 'in', ids)]
+        return False
+
+    def _search_vehicle_id(self, operator, value):
+        if operator == '=':
+            orders = self.env['sale.order'].search([('id', '>', 0)])
+            ids = [-1]
+            for order in orders:
+                if order.tasks_ids:
+                    if order.tasks_ids[0].vehicle_id.id == value:
+                        ids.append(order.id)
+            return [('id', 'in', ids)]
+        return False
+
     def get_report_name(self):
         for rec in self:
             # str (datetime.strptime(str(datetime.now().time()), "%Y-%m-%d"))
@@ -69,21 +129,21 @@ class SaleOrder(models.Model):
         return str_grueros
 
     def get_date_init(self, line):
-        if self.tasks_ids[0] and self.tasks_ids[0].binacle_ids:
+        if self.tasks_ids[0] and self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line.product_id.id):
             return self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line.product_id.id).sorted(
                 key=lambda r: r.date_init)[0].date_init - timedelta(hours=6)
         else:
             return False
 
     def get_date_end(self, line):
-        if self.tasks_ids[0] and self.tasks_ids[0].binacle_ids:
+        if self.tasks_ids[0] and self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line.product_id.id):
             return self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line.product_id.id).sorted(
                 key=lambda r: r.date_end)[-1].date_end - timedelta(hours=6)
         else:
             return False
 
     def get_days_total(self, line):
-        if self.tasks_ids[0] and self.tasks_ids[0].binacle_ids:
+        if self.tasks_ids[0] and self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line.product_id.id):
             init = self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line.product_id.id).sorted(
                 key=lambda r: r.date_init)[0].date_init - timedelta(hours=6)
             end = self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line.product_id.id).sorted(
@@ -116,9 +176,26 @@ class SaleOrder(models.Model):
                 payment_state = 'Sistema anterior de facturacion'
         return payment_state
 
+    def get_paid_ammount(self):
+        sum = 0
+        # _logger.info("Obuener Pago")
+        for invoice in self.invoice_ids:
+            # _logger.info("invoice Total: %f", invoice.amount_total)
+            # _logger.info("invoice : %f", invoice.amount_total)
+            sum += abs(invoice.amount_total - invoice.amount_residual)
+        return sum
+
     def _prepare_invoice(self):
+        
         invoice_vals = super(SaleOrder, self)._prepare_invoice()
         invoice_vals['nombre_pozo'] = self.nombre_pozo
+        
+        task = self.env['project.task'].sudo().search([
+            ('sale_order_id', '=', self.id)
+        ])
+        
+        task.write({'stage_id': 177})
+        
         return invoice_vals
 
 #     @api.onchange('order_line')
