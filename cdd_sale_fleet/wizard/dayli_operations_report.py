@@ -38,9 +38,6 @@ class AdvancesNotAppliedWizard(models.TransientModel):
 
     type_filtered = fields.Selection([
         ('date_create', 'Fecha de creacion'),
-        ('date_ejec', 'Fecha de ejecucion'),
-        ('uni_eco', 'Unidad ecónomica'),
-        ('state', 'Etapa'),
         ('all', 'Todos'),
     ], string='Tipo de filtro', required=True, default='all')
 
@@ -50,7 +47,7 @@ class AdvancesNotAppliedWizard(models.TransientModel):
         ('sale ', 'Orden de venta'),
         ('done', 'Bloqueado'),
         ('cancel', 'Cancelado'),
-    ], string='Estatus operativo')
+    ], string='Estatus cotización')
 
     vehicle_id = fields.Many2one('fleet.vehicle', string='Unidad ecónomica')
 
