@@ -186,9 +186,16 @@ class SaleOrder(models.Model):
         return sum
 
     def _prepare_invoice(self):
-    def _prepare_invoice(self):
+        
         invoice_vals = super(SaleOrder, self)._prepare_invoice()
         invoice_vals['nombre_pozo'] = self.nombre_pozo
+        
+        task = self.env['project.task'].sudo().search([
+            ('sale_order_id', '=', self.id)
+        ])
+        
+        task.write({'stage_id': 177})
+        
         return invoice_vals
 
 #     @api.onchange('order_line')
