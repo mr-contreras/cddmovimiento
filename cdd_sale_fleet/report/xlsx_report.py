@@ -186,7 +186,7 @@ class projectTaskXlsx(models.AbstractModel):
                 sheet.write(y_title, 3, rec.tasks_ids[0].name if rec.tasks_ids else '',
                             f_table_cell_text)
                 sheet.write(y_title, 4, rec.partner_id.name, f_table_cell_text)
-                sheet.write(y_title, 5, rec.tasks_ids[0].partner_id.x_studio_ubicacin if rec.tasks_ids else '',
+                sheet.write(y_title, 5, rec.nombre_pozo if rec.tasks_ids else '',
                             f_table_cell_text)
 
                 if rec.tasks_ids and rec.tasks_ids[0].binacle_ids:
@@ -213,7 +213,7 @@ class projectTaskXlsx(models.AbstractModel):
                 sheet.write(y_title, 14, (line.price_subtotal + line.price_tax), f_table_cell_money)
                 sheet.write(y_title, 15, rec.get_paid_ammount(), f_table_cell_money)
                 sheet.write(y_title, 16, payment_state, f_table_cell_text)
-                sheet.write(y_title, 17, rec.state, f_table_cell_text)
+                sheet.write(y_title, 17, rec.tasks_ids[0].stage_id.name, f_table_cell_text)
                 sheet.write(y_title, 18, ", ".join(grueros) if rec.tasks_ids else '', f_table_cell_text)
                 sheet.write(y_title, 19, horas, f_table_cell_number)
 
