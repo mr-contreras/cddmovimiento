@@ -37,8 +37,8 @@ class SaleOrder(models.Model):
     date_filtered_wizard_end = fields.Datetime('Hasta')
 
     active_task = fields.Boolean(string='Activo', compute='_has_active_task', search='_search_active_task')
-    vehicle_id = vehicle_id = fields.Many2one('fleet.vehicle', string='Grua', compute='_compute_vehicle_id',
-                                              search='_search_vehicle_id')
+    vehicle_id = fields.Many2one('fleet.vehicle', string='Grua', compute='_compute_vehicle_id',
+                                 search='_search_vehicle_id')
     task_date_last_stage_update = fields.Datetime(compute='_compute_date_last_stage_update',
                                                   search='_search_date_last_stage_update')
 
@@ -185,7 +185,6 @@ class SaleOrder(models.Model):
             sum += abs(invoice.amount_total - invoice.amount_residual)
         return sum
 
-    def _prepare_invoice(self):
     def _prepare_invoice(self):
         invoice_vals = super(SaleOrder, self)._prepare_invoice()
         invoice_vals['nombre_pozo'] = self.nombre_pozo

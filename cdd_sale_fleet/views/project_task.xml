@@ -18,15 +18,18 @@
                         <tree editable="top">
                             <field name = "parent_id_int" invisible = "1" force_save="1"/>
                             <field name = "parent_id" invisible = "1"/>
-                            <field name = "product_id" context="{'name_product_sale': parent_id_int}" />
+                            <!-- field name = "product_id" context="{'name_product_sale': parent_id_int}" / -->
+                            <field name = "product_id" domain="[('in_sale_order', '=', parent_id_int)]"/>
 <!--                            <field name = "description"/>-->
                             <field name = "date_init" required="1"/>
                             <field name = "date_end" required="1"/>
                             <field name ="delta"/>
                             <field name="odometer"/>
                             <field name="hourmeter"/>
-                            <field name = "gruero_id" required="1" context="{'employee_sale': parent_id_int}" options="{'no_open':True, 'no_create': True}" domain="[('type_employee','=','gruero')]"/>
-                            <field name = "support_id" required="1" context="{'employee_sale': parent_id_int}" options="{'no_open':True, 'no_create': True}" domain="[('type_employee','=','support')]"/>
+                            <!-- field name = "gruero_id" required="1" context="{'employee_sale': parent_id_int}" options="{'no_open':True, 'no_create': True}" domain="[('type_employee','=','gruero')]"/>
+                            <field name = "support_id" required="1" context="{'employee_sale': parent_id_int}" options="{'no_open':True, 'no_create': True}" domain="[('type_employee','=','support')]"/ -->
+                            <field name = "gruero_id" required="1" options="{'no_open':True, 'no_create': True}" domain="['&amp;', ('type_employee','=','gruero'),('in_project_task', '=', parent_id_int)]"/>
+                            <field name = "support_id" required="1" options="{'no_open':True, 'no_create': True}" domain="['&amp;', ('type_employee','=','support'),('in_project_task', '=', parent_id_int)]"/>
                             <field name = "comment"/>
                         </tree>
                         
