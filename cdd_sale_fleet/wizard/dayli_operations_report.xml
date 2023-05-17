@@ -45,7 +45,6 @@
                         <field name="date_filtered_end" attrs="{'invisible': [('type_filtered', 'not in', ['date_create', 'date_ejec'])]}"/>
                     </group> 
                     <footer>
-                        <button string="Print PDF" icon="fa-file-o" class="text_uppercase btn btn-primary" name="action_print_report" type="object"/>
                         <button string="Print xlsx" icon="fa-file-o" class="text_uppercase btn btn-primary" name="action_print_report_xlsx" type="object"/>
                         <button special="cancel" class="text_uppercase btn btn-danger" string="Cancel"/>
                     </footer>

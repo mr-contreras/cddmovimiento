@@ -146,10 +146,9 @@ class projectTaskXlsx(models.AbstractModel):
             grueros = []
             supports = []
             horas = 0
+            products = []
+            
             if rec.tasks_ids:
-                grueros_array = rec.tasks_ids[0].user_ids.mapped('name')
-                for i in grueros_array:
-                    str_grueros += (i + ' , ')
                 # _logger.info("#####################Orden: %s", rec.name)
                 for binacle in rec.tasks_ids[0].binacle_ids:
                     # _logger.info("Biacle %s, %s, %f", binacle.gruero_id.mapped('name'), binacle.support_id.mapped('name'), binacle.delta)
@@ -160,8 +159,14 @@ class projectTaskXlsx(models.AbstractModel):
                         if support not in supports:
                             supports.append(support)
                     horas += binacle.delta
+                    
+                    products.append(binacle.product_id.id)
+            
+            unique_products = (list(set(products)))
+                    
 
             payment_state = 'Sin Facturar'
+            
             if rec.invoice_ids:
                 if rec.invoice_ids[0].payment_state == 'not_paid':
                     payment_state = 'Sin pagar'
@@ -176,48 +181,72 @@ class projectTaskXlsx(models.AbstractModel):
                 elif rec.invoice_ids[0].payment_state == 'invoicing_legacy':
                     payment_state = 'Sistema anterior de facturacion'
                 # ayudantes = rec.tasks_ids[0].user_ids.filtered(lambda x : x.type_employee == 'support').mapped('name')
+            
+            if rec.tasks_ids:      
+                
+                for task in rec.tasks_ids[0]:
+                    bandera = False
+                    
+                    for product in task.binacle_ids:
+                        if product.product_id.id in unique_products:
+                            bandera = True
+                            break
+                            
+                    if bandera:
+                        for line in unique_products: 
+                            product_name = rec.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line)
+                            product_price_unit = rec.order_line.filtered(lambda u: u.product_id.id == line)
+                            product_price_subtotal = sum(rec.order_line.filtered(lambda u: u.product_id.id == line).mapped('price_subtotal'))
+                            product_price_iva = sum(rec.order_line.filtered(lambda u: u.product_id.id == line).mapped('price_tax'))
 
-            for line in rec.order_line:
-
-                sheet.write(y_title, 0, rec.name, f_table_cell_text)
-                sheet.write(y_title, 1, rec.tasks_ids[0].x_studio_contrato if rec.tasks_ids else '', f_table_cell_text)
-                sheet.write(y_title, 2, rec.tasks_ids[0].vehicle_id.x_studio_numero_economico if rec.tasks_ids else '',
-                            f_table_cell_text)
-                sheet.write(y_title, 3, rec.tasks_ids[0].name if rec.tasks_ids else '',
-                            f_table_cell_text)
-                sheet.write(y_title, 4, rec.partner_id.name, f_table_cell_text)
-                sheet.write(y_title, 5, rec.tasks_ids[0].partner_id.x_studio_ubicacin if rec.tasks_ids else '',
-                            f_table_cell_text)
-
-                if rec.tasks_ids and rec.tasks_ids[0].binacle_ids:
-                    sheet.write(y_title, 6,
-                                rec.get_date_init(line).strftime('%d-%m-%Y %H:%M:%S')
-                                if rec.get_date_init(line) else "",
-                                f_table_cell_date)
-                    sheet.write(y_title, 7,
-                                rec.get_date_end(line).strftime('%d-%m-%Y %H:%M:%S')
-                                if rec.get_date_end(line) else "",
-                                f_table_cell_date)
-
-                else:
-                    sheet.write(y_title, 6, 'Sin bitacora', f_table_cell_text)
-                    sheet.write(y_title, 7, 'Sin bitacora', f_table_cell_text)
-
-                sheet.write(y_title, 8, rec.get_total_hours(line) if rec.tasks_ids else '', f_table_cell_number)
-                sheet.write(y_title, 9, line.name, f_table_cell_text)
-                sheet.write(y_title, 10, line.price_unit, f_table_cell_money)
-                sheet.write(y_title, 11, 1, f_table_cell_number)
-                sheet.write(y_title, 12, line.price_subtotal, f_table_cell_money)
-                sheet.write(y_title, 13, line.price_tax, f_table_cell_money)
-
-                sheet.write(y_title, 14, (line.price_subtotal + line.price_tax), f_table_cell_money)
-                sheet.write(y_title, 15, rec.get_paid_ammount(), f_table_cell_money)
-                sheet.write(y_title, 16, payment_state, f_table_cell_text)
-                sheet.write(y_title, 17, rec.state, f_table_cell_text)
-                sheet.write(y_title, 18, ", ".join(grueros) if rec.tasks_ids else '', f_table_cell_text)
-                sheet.write(y_title, 19, horas, f_table_cell_number)
-
-                sheet.write(y_title, 20, ", ".join(supports) if rec.tasks_ids else '', f_table_cell_text)
-                sheet.write(y_title, 21, horas, f_table_cell_number)
-                y_title += 1
-
+                            sheet.write(y_title, 0, rec.name, f_table_cell_text)
+                            sheet.write(y_title, 1, rec.tasks_ids[0].x_studio_contrato if rec.tasks_ids else '', f_table_cell_text)
+                            sheet.write(y_title, 2, rec.tasks_ids[0].vehicle_id.x_studio_numero_economico if rec.tasks_ids else '', f_table_cell_text)
+                            sheet.write(y_title, 3, rec.tasks_ids[0].name if rec.tasks_ids else '', f_table_cell_text)
+                            sheet.write(y_title, 4, rec.partner_id.name, f_table_cell_text)
+                            sheet.write(y_title, 5, rec.nombre_pozo, f_table_cell_text)                              
+                            sheet.write(y_title, 6, rec.get_date_init_2(line).strftime('%d-%m-%Y %H:%M:%S'), f_table_cell_date)
+                            sheet.write(y_title, 7, rec.get_date_end_2(line).strftime('%d-%m-%Y %H:%M:%S'), f_table_cell_date)
+                            sheet.write(y_title, 8, rec.get_total_hours_2(line), f_table_cell_number)
+                            sheet.write(y_title, 9, product_name[0].product_id.name if product_name else '', f_table_cell_text)
+                            sheet.write(y_title, 10, product_price_unit[0].price_unit if product_price_unit else '', f_table_cell_money)
+                            sheet.write(y_title, 11, 1, f_table_cell_number)
+                            sheet.write(y_title, 12, product_price_subtotal, f_table_cell_money)
+                            sheet.write(y_title, 13, product_price_iva, f_table_cell_money)
+                            sheet.write(y_title, 14, (product_price_subtotal + product_price_iva), f_table_cell_money)
+                            sheet.write(y_title, 15, rec.get_paid_ammount(), f_table_cell_money)
+                            sheet.write(y_title, 16, payment_state, f_table_cell_text)
+                            sheet.write(y_title, 17, rec.tasks_ids[0].stage_id.name, f_table_cell_text)
+                            sheet.write(y_title, 18, ", ".join(grueros) if rec.tasks_ids else '', f_table_cell_text)
+                            sheet.write(y_title, 19, horas, f_table_cell_number)
+                            sheet.write(y_title, 20, ", ".join(supports) if rec.tasks_ids else '', f_table_cell_text)
+                            sheet.write(y_title, 21, horas, f_table_cell_number)
+                            y_title += 1
+                    else:
+                        sheet.write(y_title, 0, rec.name, f_table_cell_text)
+                        sheet.write(y_title, 1, rec.tasks_ids[0].x_studio_contrato if rec.tasks_ids else '', f_table_cell_text)
+                        sheet.write(y_title, 2, rec.tasks_ids[0].vehicle_id.x_studio_numero_economico if rec.tasks_ids else '', f_table_cell_text)
+                        sheet.write(y_title, 3, rec.tasks_ids[0].name if rec.tasks_ids else '', f_table_cell_text)
+                        sheet.write(y_title, 4, rec.partner_id.name, f_table_cell_text)
+                        sheet.write(y_title, 5, rec.nombre_pozo, f_table_cell_text)                           
+                        sheet.write(y_title, 6, '', f_table_cell_date)
+                        sheet.write(y_title, 7, '', f_table_cell_date)
+                        sheet.write(y_title, 8, 0, f_table_cell_number)
+                        sheet.write(y_title, 9, '', f_table_cell_text)
+                        sheet.write(y_title, 10, 0, f_table_cell_money)
+                        sheet.write(y_title, 11, 0, f_table_cell_number)
+                        sheet.write(y_title, 12, 0, f_table_cell_money)
+                        sheet.write(y_title, 13, 0, f_table_cell_money)
+                        sheet.write(y_title, 14, 0, f_table_cell_money)
+                        sheet.write(y_title, 15, rec.get_paid_ammount(), f_table_cell_money)
+                        sheet.write(y_title, 16, payment_state, f_table_cell_text)
+                        sheet.write(y_title, 17, task.stage_id.name, f_table_cell_text)
+                        sheet.write(y_title, 18, ", ".join(grueros) if rec.tasks_ids else '', f_table_cell_text)
+                        sheet.write(y_title, 19, horas, f_table_cell_number)
+                        sheet.write(y_title, 20, ", ".join(supports) if rec.tasks_ids else '', f_table_cell_text)
+                        sheet.write(y_title, 21, horas, f_table_cell_number) 
+                        
+                        y_title += 1
+                        
+                        
+                    
