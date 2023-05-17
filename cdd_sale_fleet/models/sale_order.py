@@ -37,8 +37,8 @@ class SaleOrder(models.Model):
     date_filtered_wizard_end = fields.Datetime('Hasta')
 
     active_task = fields.Boolean(string='Activo', compute='_has_active_task', search='_search_active_task')
-    vehicle_id = vehicle_id = fields.Many2one('fleet.vehicle', string='Grua', compute='_compute_vehicle_id',
-                                              search='_search_vehicle_id')
+    vehicle_id = fields.Many2one('fleet.vehicle', string='Grua', compute='_compute_vehicle_id',
+                                 search='_search_vehicle_id')
     task_date_last_stage_update = fields.Datetime(compute='_compute_date_last_stage_update',
                                                   search='_search_date_last_stage_update')
 
@@ -134,22 +134,22 @@ class SaleOrder(models.Model):
                 key=lambda r: r.date_init)[0].date_init - timedelta(hours=6)
         else:
             return False
-        
+
     def get_date_init_2(self, line):
         if self.tasks_ids[0] and self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line):
             return self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line).sorted(
                 key=lambda r: r.date_init)[0].date_init - timedelta(hours=6)
         else:
             return False
-        
-        
+
+
     def get_date_init_binacle(self):
         if self.tasks_ids[0] and self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line.product_id.id):
             return self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line.product_id.id).sorted(
                 key=lambda r: r.date_init)[0].date_init - timedelta(hours=6)
         else:
             return False
-        
+
 
     def get_date_end(self, line):
         if self.tasks_ids[0] and self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line.product_id.id):
@@ -157,14 +157,14 @@ class SaleOrder(models.Model):
                 key=lambda r: r.date_end)[-1].date_end - timedelta(hours=6)
         else:
             return False
-                                                                        
+
     def get_date_end_2(self, line):
         if self.tasks_ids[0] and self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line):
             return self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line).sorted(
                 key=lambda r: r.date_end)[-1].date_end - timedelta(hours=6)
         else:
             return False
-                                                                        
+
 
     def get_days_total(self, line):
         if self.tasks_ids[0] and self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line.product_id.id):
@@ -185,12 +185,12 @@ class SaleOrder(models.Model):
 
     def get_total_hours_2(self, line):
         hours = 0
-                                                                        
+
         for rec in self.tasks_ids[0].binacle_ids.filtered(lambda u: u.product_id.id == line):
             hours += rec.delta
 
-        return hours                                                                       
-                                                                        
+        return hours
+
     def get_status_invoice_paid(self, status):
         payment_state = 'Sin Facturar'
         if self.invoice_ids:
@@ -218,16 +218,15 @@ class SaleOrder(models.Model):
         return sum
 
     def _prepare_invoice(self):
-        
         invoice_vals = super(SaleOrder, self)._prepare_invoice()
         invoice_vals['nombre_pozo'] = self.nombre_pozo
-        
+
         task = self.env['project.task'].sudo().search([
             ('sale_order_id', '=', self.id)
         ])
-        
+
         task.write({'stage_id': 177})
-        
+
         return invoice_vals
 
 #     @api.onchange('order_line')

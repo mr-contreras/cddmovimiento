@@ -8,33 +8,55 @@ import pytz
 
 _logger = logging.getLogger(__name__)
 
-
 class productProduct(models.Model):
     _inherit = 'product.product'
 
+    in_sale_order = fields.Integer('in_sale_order', compute="_compute_in_sale_order", search="_search_in_sale_order")
+
+    @api.depends('name')
+    def _compute_in_sale_order(self):
+        self.in_sale_order=1
+
     @api.model
-    def _name_search(self, name, args=None, operator='ilike', limit=100, name_get_uid=None):
-        args = args or []
-        #         raise ValidationError('%s , contexto ==> %s'%(self._context.get('name_product_sale'), self._context))
-
-        args = [('name', operator, name)] + args
-        if self._context.get('name_product_sale'):
-            task = self.env['project.task'].browse(self._context.get('name_product_sale'))
-            array_product = []
-
-            filter_product = (p for p in task.sale_order_id.order_line)
-            for rec in filter_product:
-                if rec.product_id.id not in array_product:
-                    array_product.append(rec.product_id.id)
-
-            args = [('name', operator, name), ('id', 'in', array_product)] + args
-            #             _logger.warning('paso _action_confirm@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@', task, array_product)
-            #             print(nameError111)
-            return self._search(args, limit=limit, access_rights_uid=name_get_uid)
+    def _search_in_sale_order(self, operator, value):
+        if operator == "=":
+            task = self.env['project.task'].search([("id", "=", value)])
+            order = self.env['sale.order'].search([("id", "=", task.sale_order_id.id)])
+            if order:
+                products = []
+                for line in order.order_line:
+                    if line.product_id.id not in products:
+                        products.append(line.product_id.id)
+                return [("id", "in", products)]
+            else:
+                return False
         else:
+            return False
+
+#    @api.model
+#    def _name_search(self, name, args=None, operator='ilike', limit=100, name_get_uid=None):
+#        args = args or []
+#        #         raise ValidationError('%s , contexto ==> %s'%(self._context.get('name_product_sale'), self._context))
+#        _logger.info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@usando mi _name_search")
+#        args = [('name', operator, name)] + args
+#        if self._context.get('name_product_sale'):
+#            _logger.info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ eiste name_product_sale")
+#           task = self.env['project.task'].browse(self._context.get('name_product_sale'))
+#           array_product = []
+
+#            filter_product = (p for p in task.sale_order_id.order_line)
+#            for rec in filter_product:
+#                if rec.product_id.id not in array_product:
+#                    array_product.append(rec.product_id.id)
+
+#            args = [('name', operator, name), ('id', 'in', array_product)] + args
+#            _logger.info('paso _action_confirm@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@', task, array_product)
+            #             print(nameError111)
+#            return self._search(args, limit=limit, access_rights_uid=name_get_uid)
+#        else:
             #             print(nameError222)
-            return super(productProduct, self)._name_search(name=name, args=args, operator=operator, limit=limit,
-                                                            name_get_uid=name_get_uid)
+#            return super(productProduct, self)._name_search(name=name, args=args, operator=operator, limit=limit,
+#                                                            name_get_uid=name_get_uid)
 
 
 class projectBinacle(models.Model):
@@ -42,8 +64,9 @@ class projectBinacle(models.Model):
 
     parent_id = fields.Many2one('project.task', string='Proyecto', required=True, ondelete='cascade', index=True,
                                 copy=False, auto_join=True, )
+    parent_id_int = fields.Integer(' ')
     product_id = fields.Many2one('product.product', string='Producto', required=True, ondelete='cascade', index=True,
-                                 copy=False, )
+                                 copy=False, domain=[('in_sale_order', '=', parent_id_int)])
     description = fields.Char('Descripción', related='product_id.name')
     date_init = fields.Datetime('Fecha hora inicio')
     date_end = fields.Datetime('Fecha hora final')
@@ -52,7 +75,6 @@ class projectBinacle(models.Model):
     support_id = fields.Many2one('hr.employee', string='Ayudante')
     comment = fields.Char('Comentario')
     pre_parent_id = fields.Many2one('project.task', string='pre_parent')
-    parent_id_int = fields.Integer(' ')
     odometer = fields.Integer('Odometro')
     hourmeter = fields.Integer('Horometro')
 
