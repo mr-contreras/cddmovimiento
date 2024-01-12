@@ -68,7 +68,7 @@ class VacacionesNomina(models.Model):
         date_to = utc_dt_to.strftime ("%Y-%m-%d %H:%M:%S")
 
         nombre = 'Vacaciones_'+self.name
-        registro_falta = self.env['hr.holidays'].search([('name','=', nombre)], limit=1)
+        registro_falta = self.env['hr.leave'].search([('name','=', nombre)], limit=1)
         if registro_falta:
            registro_falta.write({'date_from' : date_from,
                    'date_to' : date_to,
@@ -77,7 +77,7 @@ class VacacionesNomina(models.Model):
                    'state': 'validate',
                    })
         else:
-           holidays_obj = self.env['hr.holidays']
+           holidays_obj = self.env['hr.leave']
            vals = {'date_from' : date_from,
                'holiday_status_id' : leave_type and leave_type.id,
                'employee_id' : self.employee_id.id,
@@ -90,7 +90,7 @@ class VacacionesNomina(models.Model):
            holiday._onchange_date_from()
            vals.update(holiday._convert_to_write({name: holiday[name] for name in holiday._cache}))
            #holidays_obj.create(vals)
-           vacacion = self.env['hr.holidays'].create(vals)
+           vacacion = self.env['hr.leave'].create(vals)
            vacacion.action_validate()
         self.write({'state':'done'})
 
