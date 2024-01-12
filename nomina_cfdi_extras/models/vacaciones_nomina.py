@@ -42,7 +42,7 @@ class VacacionesNomina(models.Model):
         leave_type = self.env.ref('nomina_cfdi_extras.hr_holidays_status_vac', False)
         if self.fecha_inicial:
             fecha_inicial = self.fecha_inicial.strftime("%Y-%m-%d")
-            date_from = datetime.strptime(self.fecha_inicial,"%Y-%m-%d")
+            date_from = datetime.strptime(fecha_inicial,"%Y-%m-%d")
             date_to = date_from + relativedelta(days=self.dias - 1)
             date_from = date_from.strftime("%Y-%m-%d") + ' 06:00:00'
             date_to = date_to.strftime("%Y-%m-%d") +' 20:00:00'
