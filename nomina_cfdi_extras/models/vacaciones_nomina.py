@@ -41,7 +41,7 @@ class VacacionesNomina(models.Model):
     def action_validar(self):
         leave_type = self.env.ref('nomina_cfdi_extras.hr_holidays_status_vac', False)
         if self.fecha_inicial:
-            date_from = datetime.strptime(self.fecha_inicial,"%Y-%m-%d")
+            date_from = self.fecha_inicial.strftime("%Y-%m-%d")
             date_to = date_from + relativedelta(days=self.dias - 1)
             date_from = date_from.strftime("%Y-%m-%d") + ' 06:00:00'
             date_to = date_to.strftime("%Y-%m-%d") +' 20:00:00'
@@ -56,7 +56,7 @@ class VacacionesNomina(models.Model):
         #timezone = tools.ustr(timezone).encode('utf-8')
 
         local = pytz.timezone(timezone) #get_localzone()
-        naive_from = datetime.strptime (date_from, "%Y-%m-%d %H:%M:%S")
+        naive_from = datetime.strptime(date_from, "%Y-%m-%d %H:%M:%S")
         local_dt_from = local.localize(naive_from, is_dst=None)
         utc_dt_from = local_dt_from.astimezone (pytz.utc)
         date_from = utc_dt_from.strftime ("%Y-%m-%d %H:%M:%S")
