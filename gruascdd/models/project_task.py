@@ -12,8 +12,7 @@ class ProjectTask(models.Model):
     )
 
     pozo = fields.Char(
-        "Pozo",
-        required=True
+        "Pozo"
     )
 
     model_fleet_id = fields.Many2one(
