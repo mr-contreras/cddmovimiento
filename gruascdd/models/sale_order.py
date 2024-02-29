@@ -7,13 +7,11 @@ class SaleOrder(models.Model):
     model_fleet_id = fields.Many2one(
         comodel_name="fleet.vehicle.model",
         string="Modelo de la grúa",
-        store=True,
-        required=True
+        store=True
     )
 
     pozo = fields.Char(
-        "Pozo",
-        required=True
+        "Pozo"
     )
 
     def _prepare_invoice(self):
