@@ -19,6 +19,7 @@
         "views/hr_employee.xml",
         "views/fleet_vehicle.xml",
         "views/fleet_vehicle_hourmeter.xml",
+        "views/account_move.xml",
     ],
     # only loaded in demonstration mode
     "demo": [
