@@ -16,4 +16,14 @@ class SaleOrder(models.Model):
         required=True
     )
 
+    def _prepare_invoice(self):
+        invoice_vals = super(SaleOrder, self)._prepare_invoice()
+        invoice_vals['pozo'] = self.pozo
 
+        task = self.env['project.task'].sudo().search([
+            ('sale_order_id', '=', self.id)
+        ])
+
+        task.write({'stage_id': 177})
+
+        return invoice_vals
