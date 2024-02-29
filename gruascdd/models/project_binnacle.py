@@ -79,28 +79,25 @@ class ProjectBinnacle(models.Model):
     @api.depends("odometer_init", "odometer_end", "delta_odometer")
     def _compute_delta_odometer(self):
         for rec in self:
-            if rec.odometer_init and rec.odometer_end:
-                rec.delta_odometer = rec.odometer_end - rec.odometer_init
-            else:
-                rec.delta_odometer = 0
+            rec.delta_odometer = rec.odometer_end - rec.odometer_init
+            
     @api.depends("hourmeter_init", "hourmeter_end", "delta_hourmeter")
     def _compute_delta_hourmeter(self):
         for rec in self:
-            if rec.hourmeter_init and rec.hourmeter_end:
-                rec.delta_hourmeter = rec.hourmeter_end - rec.hourmeter_init
-            else:
-                rec.delta_hourmeter = 0
+            rec.delta_hourmeter = rec.hourmeter_end - rec.hourmeter_init
+            
     @api.onchange("date_init", "date_end")
     def onchange_dates(self):
-
         if self.date_init and self.date_end:
             if self.date_init >= self.date_end:
                 raise ValidationError("La fecha de inicio no puede ser mayor o igual a la fecha final")
+                
     @api.onchange("odometer_init", "odometer_end")
     def onchange_odometer(self):
         if self.odometer_init and self.odometer_end:
             if self.odometer_init > self.odometer_end:
                 raise ValidationError("El odómetro inicial no puede ser mayor al final")
+                
     @api.onchange("hourmeter_init", "hourmeter_end")
     def onchange_hourmeter(self):
         if self.hourmeter_init and self.hourmeter_end:
