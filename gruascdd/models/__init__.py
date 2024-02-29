@@ -8,3 +8,4 @@ from . import product_product
 from . import hr_employee
 from . import fleet_vehicle
 from . import fleet_vehicle_hourmeter
+from . import account_move
