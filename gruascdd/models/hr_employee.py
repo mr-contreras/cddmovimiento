@@ -28,7 +28,7 @@ class HrEmployee(models.Model):
                         employees.append(user.id)
                 return [("id", "in", employees)]
             else:
-                return False
+                return [('id', 'in', [])] 
         else:
-            return False
+            return [('id', 'in', [])] 
 
