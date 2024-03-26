@@ -76,8 +76,8 @@
                                 <field name = "parent_id_int" invisible = "1" force_save="1"/>
                                 <field name = "parent_id" invisible = "1"/>
                                 <field name = "product_id" domain="[('in_sale_order', '=', parent_id_int)]"/>
-                                <field name = "gruero_id" required="1" options="{'no_open':True, 'no_create': True}"/>
-                                <field name = "ayudante_id" required="1" options="{'no_open':True, 'no_create': True}"/>
+                                <field name = "gruero_id" required="1" options="{'no_open':True, 'no_create': True}" domain="['&amp;', ('type_employee','=','gruero'),('in_project_task', '=', parent_id_int)]"/>
+                                <field name = "ayudante_id" required="1" options="{'no_open':True, 'no_create': True}" domain="['&amp;', ('type_employee','=','ayudante'),('in_project_task', '=', parent_id_int)]"/>
                                 <field name = "date_init" required="1" widget="datetime" />
                                 <field name = "date_end" required="1" widget="datetime" />
                                 <field name = "delta" force_save="1" sum="Delta"/>
