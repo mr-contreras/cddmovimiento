@@ -46,12 +46,14 @@ class ProjectBinnacle(models.Model):
 
     gruero_id = fields.Many2one(
         "hr.employee",
-        "Gruero"
+        "Gruero",
+        domain=[('type_employee','=','gruero')]
     )
 
     ayudante_id = fields.Many2one(
         "hr.employee",
-        "Ayudante"
+        "Ayudante",
+        domain=[('type_employee','=','ayudante')]
     )
 
     available_product_ids = fields.Many2many(
