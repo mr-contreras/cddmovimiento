@@ -54,11 +54,16 @@ class ProjectBinnacle(models.Model):
         "Ayudante"
     )
 
+    tercer_ayudante_id = fields.Many2one(
+        "hr.employee",
+        "Tercer Ayudante"
+    )
+
     available_product_ids = fields.Many2many(
         "product.product",
-        compute = "_compute_available_product_ids"
+        compute="_compute_available_product_ids"
     )
-    
+
     @api.depends("available_product_ids", "product_id")
     def _compute_available_product_ids(self):
         for rec in self:
@@ -76,28 +81,29 @@ class ProjectBinnacle(models.Model):
                 rec.delta = (rec.date_end - rec.date_init).total_seconds() / 3600
             else:
                 rec.delta = 0
+
     @api.depends("odometer_init", "odometer_end", "delta_odometer")
     def _compute_delta_odometer(self):
         for rec in self:
             rec.delta_odometer = rec.odometer_end - rec.odometer_init
-            
+
     @api.depends("hourmeter_init", "hourmeter_end", "delta_hourmeter")
     def _compute_delta_hourmeter(self):
         for rec in self:
             rec.delta_hourmeter = rec.hourmeter_end - rec.hourmeter_init
-            
+
     @api.onchange("date_init", "date_end")
     def onchange_dates(self):
         if self.date_init and self.date_end:
             if self.date_init >= self.date_end:
                 raise ValidationError("La fecha de inicio no puede ser mayor o igual a la fecha final")
-                
+
     @api.onchange("odometer_init", "odometer_end")
     def onchange_odometer(self):
         if self.odometer_init and self.odometer_end:
             if self.odometer_init > self.odometer_end:
                 raise ValidationError("El odómetro inicial no puede ser mayor al final")
-                
+
     @api.onchange("hourmeter_init", "hourmeter_end")
     def onchange_hourmeter(self):
         if self.hourmeter_init and self.hourmeter_end:

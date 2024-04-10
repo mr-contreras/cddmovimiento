@@ -64,6 +64,14 @@ class ProjectTask(models.Model):
                     'name': line.comment,
                     'unit_amount': line.delta,
                 }))
+            if line.tercer_ayudante_id:
+                # Registro Ayudante
+                timesheet_ids.append((0, 0, {
+                    'date': line.date_init.date(),
+                    'employee_id': line.tercer_ayudante_id.id,
+                    'name': line.comment,
+                    'unit_amount': line.delta,
+                }))
             if line.vehicle_id:
                 # Crea registro del Odómetro en el vehículo
                 self.env["fleet.vehicle.odometer"].create({
