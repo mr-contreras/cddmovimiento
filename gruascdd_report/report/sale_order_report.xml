@@ -95,6 +95,22 @@
                                     </t>
                                 </td>
                             </tr>
+                            <tr>
+                                <td style="border: none; font-weight: bold;">
+                                    Tercer Ayudante:
+                                </td>
+                                <td style="border: none" t-if="doc.get_binnacle_ids()">
+                                    <t t-set="tercer_ayudante" t-value="''"/>
+                                    <t t-foreach="doc.get_binnacle_ids().sorted(key=lambda l: l.date_init)" t-as="line">
+                                        <span t-if="line.tercer_ayudante_id.name not in tercer_ayudante">
+                                            <thread>
+                                                <t t-set='tercer_ayudante' t-value="tercer_ayudante +','+line.tercer_ayudante_id.name"/>
+                                            </thread>
+                                            <a> <span t-field="line.tercer_ayudante_id.name"/> </a>
+                                        </span>
+                                    </t>
+                                </td>
+                            </tr>
                         </table>
                     </div>
 
