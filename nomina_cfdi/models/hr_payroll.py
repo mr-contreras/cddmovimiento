@@ -483,7 +483,7 @@ class HrPayslip(models.Model):
                       else:
                          number_of_days =resource_days * 30.42 / 30
                   else:
-                      dias_periodo = date_to - date_from.days + 1
+                      dias_periodo = (date_to - date_from).days + 1
                       total_days = resource_days + leave_days
                       if total_days != dias_periodo:
                          if leave_days == 0  and not nvo_ingreso:

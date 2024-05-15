@@ -224,7 +224,7 @@ class HrPayslipRun(models.Model):
         self.ensure_one()
         #cr = self._cr
         payslip_obj = self.env['hr.payslip']
-        for payslip_id in self.slip_ids.ids:
+        for payslip_id in self.slip_ids.filtered(lambda x: not x.nomina_cfdi):
                 #cr.execute('SAVEPOINT model_payslip_confirm_cfdi_save')
             with self.env.cr.savepoint():
                 payslip = payslip_obj.browse(payslip_id)
