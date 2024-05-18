@@ -573,11 +573,12 @@ class HrPayslip(models.Model):
     
     @api.depends('number')
     def _get_number_folio(self):
-        if self.number:
-            self.number_folio = self.number.replace('SLIP','').replace('/','')
-        else:
-            self.write({'number': self.env['ir.sequence'].next_by_code('numero.nomina')})
-            self.number_folio = self.number.replace('NOM','').replace('/','')
+        for r in self:
+            if r.number:
+                r.number_folio = r.number.replace('SLIP','').replace('/','')
+            else:
+                r.write({'number': self.env['ir.sequence'].next_by_code('numero.nomina')})
+                r.number_folio = r.number.replace('NOM','').replace('/','')
 
     @api.returns('self', lambda value: value.id)
     def copy(self, default=None):
@@ -1503,8 +1504,6 @@ class HrPayslip(models.Model):
                 raise UserError(_('Error para timbrar factura, Factura ya generada y cancelada.'))
 
             values = payslip.build_xml()
-            print(values)
-            print(values.status)
 
             ##### MOD-2 RETORNAMOS LA RESPUESTA
             resultadoTimbrado = values.resultados[0]
@@ -1541,188 +1540,62 @@ class HrPayslip(models.Model):
                 ## MOD-2 MANDAMOS A PAGADO
                 payslip.nomina_cfdi = True
                 payslip.action_payslip_paid()
-                """report = self.env['ir.actions.report']._get_report_from_name('nomina_cfdi.report_payslip')
-                report_data = report._render([payslip.id])[0]
-                pdf_file_name = payslip.number.replace('/','_') + '.pdf'
-                self.env['ir.attachment'].with_user(self.env.ref('base.user_admin')).create(
-                                            {
-                                                'name': pdf_file_name,
-                                                'datas': base64.b64encode(report_data),
-                                                'res_model': self._name,
-                                                'res_id': payslip.id,
-                                                'type': 'binary'
-                                            }) """
+                self.env.cr.commit()
             else:
                 raise UserError("Mensaje: " + resultadoTimbrado['mensaje'])
 
-                #raise UserError("Codigo: "+str(resultadoTimbrado.status)+"\n"+"Descr: "+ resultadoTimbrado.mensaje)       
-
-
-            """_logger.info('something ... %s', response.text)
-            json_response = response.json()
-            xml_file_link = False
-            estado_factura = json_response['estado_factura']
-            if estado_factura == 'problemas_factura':
-                raise UserError(_(json_response['problemas_message']))
-            # Receive and stroe XML 
-            if json_response.get('factura_xml'):
-                xml_file_link = payslip.company_id.factura_dir + '/' + payslip.number.replace('/','_') + '.xml'
-                xml_file = open(xml_file_link, 'w')
-                xml_payment = base64.b64decode(json_response['factura_xml'])
-                xml_file.write(xml_payment.decode("utf-8"))
-                xml_file.close()
-                payslip._set_data_from_xml(xml_payment)
-                    
-                xml_file_name = payslip.number.replace('/','_') + '.xml'
-                self.env['ir.attachment'].sudo().create(
-                                            {
-                                                'name': xml_file_name,
-                                                'datas': json_response['factura_xml'],
-                                                'datas_fname': xml_file_name,
-                                                'res_model': self._name,
-                                                'res_id': payslip.id,
-                                                'type': 'binary'
-                                            })	
-                report = self.env['ir.actions.report']._get_report_from_name('nomina_cfdi.report_payslip')
-                report_data = report.render_qweb_pdf([payslip.id])[0]
-                pdf_file_name = payslip.number.replace('/','_') + '.pdf'
-                self.env['ir.attachment'].sudo().create(
-                                            {
-                                                'name': pdf_file_name,
-                                                'datas': base64.b64encode(report_data),
-                                                'datas_fname': pdf_file_name,
-                                                'res_model': self._name,
-                                                'res_id': payslip.id,
-                                                'type': 'binary'
-                                            })
-
-            payslip.write({'estado_factura': estado_factura,
-                    'xml_nomina_link': xml_file_link,
-                    'nomina_cfdi': True}) """
 
     def _set_data_from_xml(self, xml_invoice):
-        if not xml_invoice:
-            return None
-        NSMAP = {
-                 'xsi':'http://www.w3.org/2001/XMLSchema-instance',
-                 'cfdi':'http://www.sat.gob.mx/cfd/3', 
-                 'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital',
-                 }
+        for r in self:
+            if not xml_invoice:
+                return None
+            NSMAP = {
+                    'xsi':'http://www.w3.org/2001/XMLSchema-instance',
+                    'cfdi':'http://www.sat.gob.mx/cfd/3', 
+                    'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital',
+                    }
 
-        xml_data = etree.fromstring(xml_invoice)
-        Emisor = xml_data.find('cfdi:Emisor', NSMAP)
-        RegimenFiscal = Emisor.find('cfdi:RegimenFiscal', NSMAP)
-        Complemento = xml_data.find('cfdi:Complemento', NSMAP)
-        TimbreFiscalDigital = Complemento.find('tfd:TimbreFiscalDigital', NSMAP)
-        
-        self.rfc_emisor = Emisor.attrib['Rfc']
-        self.name_emisor = Emisor.attrib['Nombre']
-        self.tipocambio = xml_data.attrib['TipoCambio']
-        #  self.tipo_comprobante = xml_data.attrib['TipoDeComprobante']
-        self.moneda = xml_data.attrib['Moneda']
-        self.numero_cetificado = xml_data.attrib['NoCertificado']
-        self.cetificaso_sat = TimbreFiscalDigital.attrib['NoCertificadoSAT']
-        self.fecha_certificacion = TimbreFiscalDigital.attrib['FechaTimbrado']
-        self.selo_digital_cdfi = TimbreFiscalDigital.attrib['SelloCFD']
-        self.selo_sat = TimbreFiscalDigital.attrib['SelloSAT']
-        self.folio_fiscal = TimbreFiscalDigital.attrib['UUID']
-        if self.number:
-            self.folio = xml_data.attrib['Folio']
-        if self.company_id.serie_nomina:
-            self.serie_emisor = xml_data.attrib['Serie']
-        self.invoice_datetime = xml_data.attrib['Fecha']
-        self.version = TimbreFiscalDigital.attrib['Version']
-        self.cadena_origenal = '||%s|%s|%s|%s|%s||' % (self.version, self.folio_fiscal, self.fecha_certificacion, 
-                                                         self.selo_digital_cdfi, self.cetificaso_sat)
-        
-        options = {'width': 275 * mm, 'height': 275 * mm}
-        amount_str = str(self.total_nomina).split('.')
-        #print 'amount_str, ', amount_str
-        qr_value = 'https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?&id=%s&re=%s&rr=%s&tt=%s.%s&fe=%s' % (self.folio_fiscal,
-                                                 self.company_id.rfc, 
-                                                 self.employee_id.rfc,
-                                                 amount_str[0].zfill(10),
-                                                 amount_str[1].ljust(6, '0'),
-                                                 self.selo_digital_cdfi[-8:],
-                                                 )
-        self.qr_value = qr_value
-        ret_val = createBarcodeDrawing('QR', value=qr_value, **options)
-        self.qrcode_image = base64.encodestring(ret_val.asString('jpg'))
+            xml_data = etree.fromstring(xml_invoice)
+            Emisor = xml_data.find('cfdi:Emisor', NSMAP)
+            RegimenFiscal = Emisor.find('cfdi:RegimenFiscal', NSMAP)
+            Complemento = xml_data.find('cfdi:Complemento', NSMAP)
+            TimbreFiscalDigital = Complemento.find('tfd:TimbreFiscalDigital', NSMAP)
+            
+            r.rfc_emisor = Emisor.attrib['Rfc']
+            r.name_emisor = Emisor.attrib['Nombre']
+            r.tipocambio = xml_data.attrib['TipoCambio']
+            #  r.tipo_comprobante = xml_data.attrib['TipoDeComprobante']
+            r.moneda = xml_data.attrib['Moneda']
+            r.numero_cetificado = xml_data.attrib['NoCertificado']
+            r.cetificaso_sat = TimbreFiscalDigital.attrib['NoCertificadoSAT']
+            r.fecha_certificacion = TimbreFiscalDigital.attrib['FechaTimbrado']
+            r.selo_digital_cdfi = TimbreFiscalDigital.attrib['SelloCFD']
+            r.selo_sat = TimbreFiscalDigital.attrib['SelloSAT']
+            r.folio_fiscal = TimbreFiscalDigital.attrib['UUID']
+            if r.number:
+                r.folio = xml_data.attrib['Folio']
+            if r.company_id.serie_nomina:
+                r.serie_emisor = xml_data.attrib['Serie']
+            r.invoice_datetime = xml_data.attrib['Fecha']
+            r.version = TimbreFiscalDigital.attrib['Version']
+            r.cadena_origenal = '||%s|%s|%s|%s|%s||' % (r.version, r.folio_fiscal, r.fecha_certificacion, 
+                                                            r.selo_digital_cdfi, r.cetificaso_sat)
+            
+            options = {'width': 275 * mm, 'height': 275 * mm}
+            amount_str = str(r.total_nomina).split('.')
+            #print 'amount_str, ', amount_str
+            qr_value = 'https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?&id=%s&re=%s&rr=%s&tt=%s.%s&fe=%s' % (r.folio_fiscal,
+                                                    r.company_id.rfc, 
+                                                    r.employee_id.rfc,
+                                                    amount_str[0].zfill(10),
+                                                    amount_str[1].ljust(6, '0'),
+                                                    r.selo_digital_cdfi[-8:],
+                                                    )
+            r.qr_value = qr_value
+            ret_val = createBarcodeDrawing('QR', value=qr_value, **options)
+            r.qrcode_image = base64.encodestring(ret_val.asString('jpg'))
 
-    """ def action_cfdi_cancel(self):
-        for payslip in self:
-            if payslip.nomina_cfdi:
-                if payslip.estado_factura == 'factura_cancelada':
-                    pass
-                    # raise UserError(_('La factura ya fue cancelada, no puede volver a cancelarse.'))
-                if not payslip.company_id.archivo_cer:
-                    raise UserError(_('Falta la ruta del archivo .cer'))
-                if not payslip.company_id.archivo_key:
-                    raise UserError(_('Falta la ruta del archivo .key'))
-                archivo_cer = payslip.company_id.archivo_cer
-                archivo_key = payslip.company_id.archivo_key
-                archivo_xml_link = payslip.company_id.factura_dir + '/' + payslip.number.replace('/','_') + '.xml'
-                with open(archivo_xml_link, 'rb') as cf:
-                    archivo_xml = base64.b64encode(cf.read())
-                values = {
-                          'rfc': payslip.company_id.rfc,
-                          'api_key': payslip.company_id.proveedor_timbrado,
-                          'uuid': self.folio_fiscal,
-                          'folio': self.folio,
-                          'serie_factura': payslip.company_id.serie_nomina,
-                          'modo_prueba': payslip.company_id.modo_prueba,
-                            'certificados': {
-                                  'archivo_cer': archivo_cer.decode("utf-8"),
-                                  'archivo_key': archivo_key.decode("utf-8"),
-                                  'contrasena': payslip.company_id.contrasena,
-                            },
-                          'xml': archivo_xml.decode("utf-8"),
-                          }
-                if self.company_id.proveedor_timbrado == 'multifactura':
-                    url = '%s' % ('http://facturacion.itadmin.com.mx/api/refund')
-                elif self.company_id.proveedor_timbrado == 'multifactura2':
-                    url = '%s' % ('http://facturacion2.itadmin.com.mx/api/refund')
-                elif self.company_id.proveedor_timbrado == 'multifactura3':
-                    url = '%s' % ('http://facturacion3.itadmin.com.mx/api/refund')
-                elif self.company_id.proveedor_timbrado == 'gecoerp':
-                    if self.company_id.modo_prueba:
-                        url = '%s' % ('https://ws.gecoerp.com/itadmin/pruebas/refund/?handler=OdooHandler33')
-                        #url = '%s' % ('https://itadmin.gecoerp.com/refund/?handler=OdooHandler33')
-                    else:
-                        url = '%s' % ('https://itadmin.gecoerp.com/refund/?handler=OdooHandler33')
-                response = requests.post(url , 
-                                         auth=None,verify=False, data=json.dumps(values), 
-                                         headers={"Content-type": "application/json"})
-    
-                #print 'Response: ', response.status_code
-                json_response = response.json()
-                #_logger.info('log de la exception ... %s', response.text)
 
-                if json_response['estado_factura'] == 'problemas_factura':
-                    raise UserError(_(json_response['problemas_message']))
-                elif json_response.get('factura_xml', False):
-                    if payslip.number:
-                        xml_file_link = payslip.company_id.factura_dir + '/CANCEL_' + payslip.number.replace('/','_') + '.xml'
-                    else:
-                        raise UserError(_('La nómina no tiene nombre'))
-                    xml_file = open(xml_file_link, 'w')
-                    xml_invoice = base64.b64decode(json_response['factura_xml'])
-                    xml_file.write(xml_invoice.decode("utf-8"))
-                    xml_file.close()
-                    if payslip.number:
-                        file_name = payslip.number.replace('/','_') + '.xml'
-                    else:
-                        file_name = self.number.replace('/','_') + '.xml'
-                    self.env['ir.attachment'].sudo().create(
-                                                {
-                                                    'name': file_name,
-                                                    'datas': json_response['factura_xml'],
-                                                    'datas_fname': file_name,
-                                                    'res_model': self._name,
-                                                    'res_id': payslip.id,
-                                                    'type': 'binary'
-                                                })
-                payslip.write({'estado_factura': json_response['estado_factura']}) """
 
     ##METODO PARA CANCELAR
     def cfdi_etree(self):
