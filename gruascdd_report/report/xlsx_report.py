@@ -283,7 +283,7 @@ class projectTaskXlsx(models.AbstractModel):
                         sheet.write(y_title, 8, hourmeter_end if product.hourmeter_end else "0:00", f_table_cell_text)
                         sheet.write(y_title, 9, delta_hourmeter if product.delta_hourmeter else "0:00", f_table_cell_text)
 
-                        sheet.write(y_title, 10, product.gasolina if product.gasolina else 0.00, f_table_cell_number)
+                        sheet.write(y_title, 10, '''product.gasolina if product.gasolina else''' 0.00, f_table_cell_number)
 
                         sheet.write(y_title, 11, rec.tasks_ids[0].name if rec.tasks_ids else '', f_table_cell_text)
                         sheet.write(y_title, 12, rec.partner_id.name, f_table_cell_text)
