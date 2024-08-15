@@ -1,6 +1,13 @@
 from odoo import fields, models, api
 from odoo.exceptions import ValidationError
+from datetime import datetime, timedelta
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
+import logging
+import time
+from pytz import timezone
+import pytz
 
+_logger = logging.getLogger(__name__)
 
 class ProjectBinnacle(models.Model):
     _name = "project.binnacle"
@@ -42,7 +49,16 @@ class ProjectBinnacle(models.Model):
     hourmeter_init = fields.Integer("Horómetro inicial")
     hourmeter_end = fields.Integer("Horómetro final")
     delta_hourmeter = fields.Integer("Delta horómetro", compute="_compute_delta_hourmeter", store=True)
+    gasolina = fields.Float("Diésel")
     comment = fields.Char("Comentario")
+    origen = fields.Selection([
+        ('tablet', 'Tableta'),
+        ('odoo', 'Odoo')], string='Origen del registro', default='odoo', required=False)
+    salto_secuencia = fields.Boolean('Salto en sucencia?', default=False, store=True, compute="_compute_salto_secuencia")
+    hourmeter_id = fields.Integer("ID Horómetro")
+    odometer_id = fields.Integer("ID Odometer")
+    gas_id = fields.Integer("ID Gas")
+    
 
     gruero_id = fields.Many2one(
         "hr.employee",
@@ -63,7 +79,7 @@ class ProjectBinnacle(models.Model):
         "product.product",
         compute="_compute_available_product_ids"
     )
-
+    
     @api.depends("available_product_ids", "product_id")
     def _compute_available_product_ids(self):
         for rec in self:
@@ -92,20 +108,290 @@ class ProjectBinnacle(models.Model):
         for rec in self:
             rec.delta_hourmeter = rec.hourmeter_end - rec.hourmeter_init
 
+    @api.depends("date_init", "date_end")
+    def _compute_salto_secuencia(self):
+        bandera = False
+        tz = self.env.user.tz or self.env._context.get('tz') # Find Timezone from user or partner or employee
+        att_tz = timezone(tz or 'utc') 
+        
+        binnacle = self.env['project.binnacle'].sudo().search([('parent_id_int', '=', self.parent_id_int)], order='date_init asc')
+            
+        for line in binnacle[0]:
+            self.env['project.binnacle'].sudo().search([('id', '=', line.id)]).write({"salto_secuencia": False})
+        
+        for i in binnacle[1:]:
+            attendance_dt = datetime.strptime(str(i.date_init), DEFAULT_SERVER_DATETIME_FORMAT) #Input date
+            att_tz_dt = pytz.utc.localize(attendance_dt)
+            local_date_init = att_tz_dt.astimezone(att_tz)
+            date_before = local_date_init.date() + timedelta(days=-1)
+        
+                #_logger.info("date_before:" + str(date_before))
+                #_logger.info("local_date_init:" + str(local_date_init.date()))
+                    
+            for j in binnacle:
+                attendance_dt = datetime.strptime(str(j.date_end), DEFAULT_SERVER_DATETIME_FORMAT) #Input date
+                att_tz_dt = pytz.utc.localize(attendance_dt)
+                local_date_end_db = att_tz_dt.astimezone(att_tz) # converted value to tz
+        
+                     #_logger.info("local_date_end_db:" + str(local_date_end_db.date()))
+        
+                if local_date_end_db.date() == date_before or local_date_end_db.date() == local_date_init.date():
+                    bandera = False
+                    break
+                else:
+                    bandera = True
+        
+            self.env['project.binnacle'].sudo().search([('id', '=', i.id)]).write({"salto_secuencia": bandera})  
+            
+                
     @api.onchange("date_init", "date_end")
-    def onchange_dates(self):
+    def onchange_date(self):
+
         if self.date_init and self.date_end:
             if self.date_init >= self.date_end:
                 raise ValidationError("La fecha de inicio no puede ser mayor o igual a la fecha final")
-
-    @api.onchange("odometer_init", "odometer_end")
-    def onchange_odometer(self):
+        
+    
+    @api.onchange("odometer_init","odometer_end")
+    def onchange_odometer_end(self):
         if self.odometer_init and self.odometer_end:
             if self.odometer_init > self.odometer_end:
-                raise ValidationError("El odómetro inicial no puede ser mayor al final")
+                raise ValidationError("El odómetro inicial no puede ser mayor al final") 
 
-    @api.onchange("hourmeter_init", "hourmeter_end")
-    def onchange_hourmeter(self):
+    @api.onchange("hourmeter_end","hourmeter_init")
+    def onchange_hourmeter_init(self):
         if self.hourmeter_init and self.hourmeter_end:
             if self.hourmeter_init > self.hourmeter_end:
                 raise ValidationError("El horómetro inicial no puede ser mayor al final")
+            
+    @api.onchange("gasolina")
+    def onchange_gasolina(self):
+        if self.gasolina:
+            if self.gasolina < 0:
+                raise ValidationError("El valor debe ser mayor que 0")
+
+    @api.model
+    def create(self, vals):
+        bandera = False
+        tz = self.env.user.tz or self.env._context.get('tz') # Find Timezone from user or partner or employee
+        att_tz = timezone(tz or 'utc') 
+        
+        date_end = vals["date_end"] if "date_end" in vals else self.date_end
+        date_init = vals["date_init"] if "date_init" in vals else self.date_init
+        vehicle_id = vals["vehicle_id"] if "vehicle_id" in vals else self.vehicle_id
+        id = vals["id"] if "id" in vals else self.id
+        hourmeter_end = vals["hourmeter_end"] if "hourmeter_end" in vals else self.hourmeter_end
+        odometer_end = vals["odometer_end"] if "odometer_end" in vals else self.odometer_end
+        gasolina = vals["gasolina"] if "gasolina" in vals else self.gasolina
+        gruero_id = vals["gruero_id"] if "gruero_id" in vals else self.gruero_id
+        parent_id = vals["parent_id"] if "parent_id" in vals else self.parent_id
+        folio = vals["folio"] if "folio" in vals else self.folio
+        parent_id_int = vals["parent_id_int"] if "parent_id_int" in vals else self.parent_id_int
+        
+        tz = self.env.user.tz or self.env._context.get('tz') # Find Timezone from user or partner or employee
+        att_tz = timezone(tz or 'utc') # If no tz then return in UTC
+        attendance_dt = datetime.strptime(str(date_end), DEFAULT_SERVER_DATETIME_FORMAT) #Input date
+        att_tz_dt = pytz.utc.localize(attendance_dt)
+        local_date_end = att_tz_dt.astimezone(att_tz) # converted value to tz
+        
+        # Crea registro del Horómetro en el vehículo
+        result_hourmeter = self.env["fleet.vehicle.hourmeter"].sudo().create({
+            "date": local_date_end.date(),
+            "value": hourmeter_end,
+            "vehicle_id": vehicle_id,
+            "driver_employee_id": gruero_id,
+            "binnacle_id": id,
+            "folio": folio
+        })
+
+        # Crea registro del Odometro en el vehículo
+        result_odometer = self.env["fleet.vehicle.odometer"].sudo().create({
+            "date": local_date_end.date(),
+            "value": odometer_end,
+            "vehicle_id": vehicle_id,
+            "driver_employee_id": gruero_id,
+            "binnacle_id": id,
+            "folio": folio
+        })
+
+        # Crea registro del Diesel en el vehículo
+        result_gas = self.env["fleet.vehicle.gas"].sudo().create({
+            "date": local_date_end.date(),
+            "value": gasolina,
+            "vehicle_id": vehicle_id,
+            "driver_employee_id": gruero_id,
+            "binnacle_id": id,
+            "folio": folio
+        })
+
+        vals["hourmeter_id"] = result_hourmeter
+        vals["odometer_id"] = result_odometer
+        vals["gas_id"] = result_gas
+
+        result = super(ProjectBinnacle, self).create(vals)
+        
+        binnacle = self.env['project.binnacle'].sudo().search([('parent_id_int', '=', parent_id_int)], order='date_init asc')
+
+        for line in binnacle[0]:
+             self.env['project.binnacle'].sudo().search([('id', '=', line.id)]).write({"salto_secuencia": False})
+
+        for i in binnacle[1:]:
+            attendance_dt = datetime.strptime(str(i.date_init), DEFAULT_SERVER_DATETIME_FORMAT) #Input date
+            att_tz_dt = pytz.utc.localize(attendance_dt)
+            local_date_init = att_tz_dt.astimezone(att_tz)
+            date_before = local_date_init.date() + timedelta(days=-1)
+
+            #_logger.info("date_before:" + str(date_before))
+            #_logger.info("local_date_init:" + str(local_date_init.date()))
+            
+            for j in binnacle:
+                attendance_dt = datetime.strptime(str(j.date_end), DEFAULT_SERVER_DATETIME_FORMAT) #Input date
+                att_tz_dt = pytz.utc.localize(attendance_dt)
+                local_date_end_db = att_tz_dt.astimezone(att_tz) # converted value to tz
+
+                #_logger.info("local_date_end_db:" + str(local_date_end_db.date()))
+
+                if local_date_end_db.date() == date_before or local_date_end_db.date() == local_date_init.date():
+                    bandera = False
+                    break
+                else:
+                    bandera = True
+
+            self.env['project.binnacle'].sudo().search([('id', '=', i.id)]).write({"salto_secuencia": bandera})
+
+        return result
+        
+    @api.model
+    def write(self, vals):
+        bandera = False
+        tz = self.env.user.tz or self.env._context.get('tz') # Find Timezone from user or partner or employee
+        att_tz = timezone(tz or 'utc') 
+        
+        date_end = datetime.strptime(vals["date_end"], "%Y-%m-%d %H:%M:%S") if "date_end" in vals else self.date_end
+        date_init = datetime.strptime(vals["date_init"], "%Y-%m-%d %H:%M:%S") if "date_init" in vals else self.date_init  
+        vehicle_id = vals["vehicle_id"] if "vehicle_id" in vals else self.vehicle_id
+        id = vals["id"] if "id" in vals else self.id
+        hourmeter_end = vals["hourmeter_end"] if "hourmeter_end" in vals else self.hourmeter_end
+        odometer_end = vals["odometer_end"] if "odometer_end" in vals else self.odometer_end
+        gasolina = vals["gasolina"] if "gasolina" in vals else self.gasolina
+        gruero_id = vals["gruero_id"] if "gruero_id" in vals else self.gruero_id
+        parent_id = vals["parent_id"] if "parent_id" in vals else self.parent_id
+        folio = vals["folio"] if "folio" in vals else self.folio
+        parent_id_int = vals["parent_id_int"] if "parent_id_int" in vals else self.parent_id_int
+        hourmeter_id = vals["hourmeter_id"] if "hourmeter_id" in vals else self.hourmeter_id
+        odometer_id = vals["odometer_id"] if "odometer_id" in vals else self.odometer_id
+        gas_id = vals["gas_id"] if "gas_id" in vals else self.gas_id           
+            
+        tz = self.env.user.tz or self.env._context.get('tz') # Find Timezone from user or partner or employee
+        att_tz = timezone(tz or 'utc') # If no tz then return in UTC
+        attendance_dt = datetime.strptime(str(date_end), DEFAULT_SERVER_DATETIME_FORMAT) #Input date
+        att_tz_dt = pytz.utc.localize(attendance_dt)
+        local_date_end = att_tz_dt.astimezone(att_tz) # converted value to tz
+
+        result = super(ProjectBinnacle, self).write(vals)
+        
+        if result:     
+            horometer_log = self.env['fleet.vehicle.hourmeter'].sudo().search([('id', '=', hourmeter_id)])
+            odometer_log = self.env['fleet.vehicle.odometer'].sudo().search([('id', '=', odometer_id)])
+            gas_log = self.env['fleet.vehicle.gas'].sudo().search([('id', '=', gas_id)])
+            
+            # Actualizar registro del Horómetro en el vehículo
+            horometer_log.sudo().write({
+                "date": local_date_end.date(),
+                "value": hourmeter_end,
+                "vehicle_id": vehicle_id.id,
+                "driver_employee_id": gruero_id.id,
+                "driver_id": gruero_id.address_home_id.id,
+                "binnacle_id": id,
+                "task_name": parent_id.name,
+                "folio": folio
+            })
+        
+            # Actualizar registro del Odometro en el vehículo
+            odometer_log.sudo().write({
+                "date": local_date_end.date(),
+                "value": odometer_end,
+                "vehicle_id": vehicle_id.id,
+                "driver_employee_id": gruero_id.id,
+                "driver_id": gruero_id.address_home_id.id,
+                "binnacle_id": id,
+                "task_name": parent_id.name,
+                "folio": folio
+            })
+        
+            # Actualizar registro del Diesel en el vehículo
+            gas_log.sudo().write({
+                "date": local_date_end.date(),
+                "value": gasolina,
+                "vehicle_id": vehicle_id.id,
+                "driver_employee_id": gruero_id.id,
+                "driver_id": gruero_id.address_home_id.id,
+                "binnacle_id": id,
+                "task_name": parent_id.name,
+                "folio": folio
+            })            
+     
+        return result
+
+    @api.model
+    def unlink(self):
+        salto_secuencia = False
+        parent_id_int = None
+        
+        for line in self:
+            
+            tz = self.env.user.tz or self.env._context.get('tz') # Find Timezone from user or partner or employee
+            att_tz = timezone(tz or 'utc') # If no tz then return in UTC
+            attendance_dt = datetime.strptime(str(line.date_end), DEFAULT_SERVER_DATETIME_FORMAT) #Input date
+            att_tz_dt = pytz.utc.localize(attendance_dt)
+            local_date_end = att_tz_dt.astimezone(att_tz) # converted value to tz
+    
+            horometer_log = self.env['fleet.vehicle.hourmeter'].sudo().search([('id', '=', line.hourmeter_id)])
+            odometer_log = self.env['fleet.vehicle.odometer'].sudo().search([('id', '=', line.odometer_id)])
+            gas_log = self.env['fleet.vehicle.gas'].sudo().search([('id', '=', line.gas_id)])
+
+            if not parent_id_int:
+                parent_id_int = line.parent_id_int
+            
+            horometer_log.unlink()
+            odometer_log.unlink()
+            gas_log.unlink()
+        
+        result = super(ProjectBinnacle, self).unlink()
+
+        #self.env.cr.commit()
+
+        #_logger.info("parent_id_int:" + str(parent_id_int))
+
+        binnacle = self.env['project.binnacle'].sudo().search([('parent_id_int', '=', parent_id_int)], order='date_init asc')
+
+        #_logger.info("len(binnacle):" + str(len(binnacle)))
+        
+        for line in binnacle[0]:
+            self.env['project.binnacle'].sudo().search([('id', '=', line.id)]).write({"salto_secuencia": False})
+
+        for i in binnacle[1:]:
+            attendance_dt = datetime.strptime(str(i.date_init), DEFAULT_SERVER_DATETIME_FORMAT) #Input date
+            att_tz_dt = pytz.utc.localize(attendance_dt)
+            local_date_init = att_tz_dt.astimezone(att_tz)
+            date_before = local_date_init.date() + timedelta(days=-1)
+
+            #_logger.info("date_before:" + str(date_before))
+            #_logger.info("local_date_init:" + str(local_date_init.date()))
+            
+            for j in binnacle:
+                attendance_dt = datetime.strptime(str(j.date_end), DEFAULT_SERVER_DATETIME_FORMAT) #Input date
+                att_tz_dt = pytz.utc.localize(attendance_dt)
+                local_date_end_db = att_tz_dt.astimezone(att_tz) # converted value to tz
+
+                #_logger.info("local_date_end_db:" + str(local_date_end_db.date()))
+
+                if local_date_end_db.date() == date_before or local_date_end_db.date() == local_date_init.date():
+                    bandera = False
+                    break
+                else:
+                    bandera = True
+
+            self.env['project.binnacle'].sudo().search([('id', '=', i.id)]).write({"salto_secuencia": bandera})
+        
+        return result

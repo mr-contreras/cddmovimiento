@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 from odoo import api, fields, models
-class FleetVehicleHourmeter(models.Model):
-    _name = 'fleet.vehicle.hourmeter'
-    _description = 'Hourmeter log for a vehicle'
+
+class FleetVehicleGas(models.Model):
+    _name = 'fleet.vehicle.gas'
+    _description = 'Diesel log for a vehicle'
     _order = 'date desc'
 
     name = fields.Char(compute="_compute_vehicle_log_name", store=True)
     date = fields.Date(default=fields.Date.context_today)
-    value = fields.Float("Horometer Value", group_operator="max")
+    value = fields.Float("Diesel Value", group_operator="max")
     vehicle_id = fields.Many2one("fleet.vehicle", 'Vehicle', required=True)
-    unit = fields.Selection(related="vehicle_id.hourmeter_unit", string="Unit", readonly=True)
+    unit = fields.Selection(related="vehicle_id.gas_unit", string="Unit", readonly=True)
     driver_id = fields.Many2one(related="vehicle_id.driver_id", string="Driver", readonly=False)
     driver_employee_id = fields.Many2one(related="vehicle_id.driver_employee_id", string="Conductor(Empleado)", readonly=False)
-    binnacle_id = fields.Integer(string='Bitacora',store=True, readonly=True)
+    binnacle_id = fields.Integer(string='Bitácora',store=True, readonly=True)
     task_name = fields.Char("Servicio", store=True, readonly=True)
     folio = fields.Char("Folio", store=True, readonly=True)
 
@@ -30,4 +31,4 @@ class FleetVehicleHourmeter(models.Model):
     @api.onchange("vehicle_id")
     def _onchange_vehicle(self):
         if self.vehicle_id:
-            self.unit = self.vehicle_id.hourmeter_unit
+            self.unit = self.vehicle_id.gas_unit

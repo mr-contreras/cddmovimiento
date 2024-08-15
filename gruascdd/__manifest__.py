@@ -5,7 +5,7 @@
     "author": "Eligio Chan",
     "website": "https://ezzquad.com",
     "category": "Sale",
-    "version": "2.0",
+    "version": "2.5",
     "license": "OPL-1",
 
     # any module necessary for this one to work correctly
@@ -19,6 +19,7 @@
         "views/hr_employee.xml",
         "views/fleet_vehicle.xml",
         "views/fleet_vehicle_hourmeter.xml",
+        "views/fleet_vehicle_gas.xml",
         "views/account_move.xml",
     ],
     # only loaded in demonstration mode

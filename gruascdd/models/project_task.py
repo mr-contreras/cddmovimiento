@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api
+from odoo.exceptions import ValidationError
 
 class ProjectTask(models.Model):
     _inherit = "project.task"
@@ -65,14 +66,16 @@ class ProjectTask(models.Model):
                     'unit_amount': line.delta,
                 }))
             if line.tercer_ayudante_id:
-                # Registro Ayudante
+                # Registro tercer ayudante
                 timesheet_ids.append((0, 0, {
                     'date': line.date_init.date(),
                     'employee_id': line.tercer_ayudante_id.id,
                     'name': line.comment,
                     'unit_amount': line.delta,
                 }))
-            if line.vehicle_id:
+
+            # Se podrán enviar al módulo de flotas desde la bitácora siempre que el registro haya sido creado en Odoo
+            '''if line.vehicle_id and line.origen != 'tablet':
                 # Crea registro del Odómetro en el vehículo
                 self.env["fleet.vehicle.odometer"].create({
                     "date": line.date_end,
@@ -81,6 +84,7 @@ class ProjectTask(models.Model):
                     "driver_employee_id": line.gruero_id.id,
                     "driver_id": line.gruero_id.address_home_id.id,
                 })
+                
                 # Crea registro del Horómetro en el vehículo
                 self.env["fleet.vehicle.hourmeter"].create({
                     "date": line.date_end,
@@ -90,6 +94,15 @@ class ProjectTask(models.Model):
                     "driver_id": line.gruero_id.address_home_id.id,
                 })
 
+                # Crea registro de gasolina en el vehículo
+                self.env["fleet.vehicle.gas"].create({
+                    "date": line.date_end,
+                    "value": line.gasolina,
+                    "vehicle_id": line.vehicle_id.id,
+                    "driver_employee_id": line.gruero_id.id,
+                    "driver_id": line.gruero_id.address_home_id.id,
+                })'''
+                
         self.timesheet_ids = timesheet_ids
 
         self.editable = False

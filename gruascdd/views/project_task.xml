@@ -72,8 +72,9 @@
                         <field name = "id" invisible = "1"/>
                         <field name = "editable" invisible = "1"/>
                         <field name="binnacle_ids" context="{'default_parent_id_int': id}" attrs="{'readonly': [('editable', '=', False)]}">
-                            <tree editable="bottom">
+                            <tree editable="bottom" decoration-danger="salto_secuencia==True" default_order="date_init">
                                 <field name = "parent_id_int" invisible = "1" force_save="1"/>
+                                <field name = "salto_secuencia" invisible = "1" force_save="1"/>
                                 <field name = "parent_id" invisible = "1"/>
                                 <field name = "product_id" domain="[('in_sale_order', '=', parent_id_int)]"/>
                                 <field name = "gruero_id" required="1" options="{'no_open':True, 'no_create': True}" context="{'type_employee': 'gruero'}" domain="['&amp;', ('type_employee','=','gruero'),('in_project_task', '=', parent_id_int)]"/>
@@ -84,12 +85,13 @@
                                 <field name = "delta" force_save="1" sum="Delta"/>
                                 <field name = "folio" force_save="1"/>
                                 <field name = "vehicle_id" required="1" options="{'no_open':True, 'no_create': True}"/>
-                                <field name = "odometer_init" required="1"/>
-                                <field name = "odometer_end" required="1"/>
+                                <field name = "odometer_init" />
+                                <field name = "odometer_end" />
                                 <field name = "delta_odometer" force_save="1" sum="Delta odómetro"/>
-                                <field name = "hourmeter_init" required="1" widget="float_time"/>
-                                <field name = "hourmeter_end" required="1" widget="float_time"/>
+                                <field name = "hourmeter_init" widget="float_time"/>
+                                <field name = "hourmeter_end" widget="float_time" />
                                 <field name = "delta_hourmeter" widget="float_time" force_save="1" sum="Delta horómetro"/>
+                                <field name = "gasolina" />
                                 <field name = "comment" />
                             </tree>
                         </field>
