@@ -3,8 +3,13 @@ import logging
 from odoo import api, fields, models, tools, _
 from odoo.addons import decimal_precision as dp
 from odoo.exceptions import UserError, ValidationError
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
+import time
+from pytz import timezone
+import pytz
+import math
 
 _logger = logging.getLogger(__name__)
 
@@ -18,6 +23,11 @@ class projectTaskXlsx(models.AbstractModel):
     _name = 'report.project.task.xlsx'
     _inherit = 'report.report_xlsx.abstract'
 
+    def float_time_convert(self, float_val):
+        factor = float_val < 0 and -1 or 1
+        val = abs(float_val)
+        return (factor * int(math.floor(val)), int(round((val % 1) * 60)))
+    
     def generate_xlsx_report(self, workbook, data, obj):
         USD = 2
         MXN = 33
@@ -74,58 +84,69 @@ class projectTaskXlsx(models.AbstractModel):
         # Encabezadode la tabla
         sheet.set_column('A:C', 15)
         sheet.set_column('D:D', 20)
-        sheet.set_column('E:G', 35)
-        sheet.set_column('H:I', 25)
-        sheet.set_column('J:J', 15)
-        sheet.set_column('K:K', 30)
-        sheet.set_column('L:L', 15)
-        sheet.set_column('M:U', 25)
-        sheet.set_column('V:W', 15)
-        sheet.set_column('X:X', 40)
-        sheet.set_column('Y:Y', 16)
-        sheet.set_column('Z:Z', 40)
-        sheet.set_column('AA:AA', 16)
-        sheet.set_column('AB:AB', 40)
-        sheet.set_column('AC:AC', 16)
+        sheet.set_column('E:K', 10)
+        
+        sheet.set_column('L:N', 35)
+        sheet.set_column('O:P', 25)
+        sheet.set_column('Q:Q', 15)
+        sheet.set_column('R:R', 30)
+        sheet.set_column('S:S', 15)
+        sheet.set_column('T:AB', 25)
+        sheet.set_column('AC:AD', 15)
+        sheet.set_column('AE:AE', 40)
+        sheet.set_column('AF:AF', 16)
+        sheet.set_column('AG:AG', 40)
+        sheet.set_column('AH:AH', 16)
+        sheet.set_column('AI:AI', 40)
+        sheet.set_column('AJ:AJ', 16)
 
         y_title = 6  # 8
-        sheet.write(y_title, 0, 'Trabajo #', f_table_header)
-        sheet.write(y_title, 1, 'Folio #', f_table_header)
-        sheet.write(y_title, 2, 'Número de contrato (GSM)', f_table_header)
-        sheet.write(y_title, 3, 'Grúa # ', f_table_header)
+        sheet.write(y_title, 0, 'Trabajo #', f_table_header) #A
+        sheet.write(y_title, 1, 'Folio #', f_table_header) #B
+        sheet.write(y_title, 2, 'Número de contrato (GSM)', f_table_header) #C
+        
+        sheet.write(y_title, 3, 'Grúa # ', f_table_header) #D
+        
+        sheet.write(y_title, 4, 'Odómetro Ini ', f_table_header) #E
+        sheet.write(y_title, 5, 'Odómetro Fin ', f_table_header) #F
+        sheet.write(y_title, 6, 'Odómetro Delta ', f_table_header) #G
+        sheet.write(y_title, 7, 'Horómetro Ini ', f_table_header) #H
+        sheet.write(y_title, 8, 'Horómetro Fin ', f_table_header) #I
+        sheet.write(y_title, 9, 'Horómetro Delta ', f_table_header) #J
+        sheet.write(y_title, 10, 'Diesel ', f_table_header) #K
+        
+        sheet.write(y_title, 11, 'Nombre tarea', f_table_header) #L
+        sheet.write(y_title, 12, 'Cliente', f_table_header) #M
+        sheet.write(y_title, 13, 'Locación', f_table_header) #N
 
-        sheet.write(y_title, 4, 'Nombre tarea', f_table_header)
-        sheet.write(y_title, 5, 'Cliente', f_table_header)
-        sheet.write(y_title, 6, 'Locación', f_table_header)
+        sheet.write(y_title, 14, 'Inicio', f_table_header) #O
+        sheet.write(y_title, 15, 'Final', f_table_header) #P
 
-        sheet.write(y_title, 7, 'Inicio', f_table_header)
-        sheet.write(y_title, 8, 'Final', f_table_header)
+        sheet.write(y_title, 16, 'Total Horas', f_table_header) #Q
 
-        sheet.write(y_title, 9, 'Total Horas', f_table_header)
+        sheet.write(y_title, 17, 'Detalle ', f_table_header) #R
 
-        sheet.write(y_title, 10, 'Detalle ', f_table_header)
+        sheet.write(y_title, 18, 'Cantidad de Grúas', f_table_header) #S
 
-        sheet.write(y_title, 11, 'Cantidad de Grúas', f_table_header)
+        sheet.write(y_title, 19, 'Precio MXN', f_table_header) #T
+        sheet.write(y_title, 20, 'Sub Total MXN', f_table_header) #U
+        sheet.write(y_title, 21, 'IVA MXN', f_table_header) #V
+        sheet.write(y_title, 22, 'Total MXN', f_table_header) #W
+        sheet.write(y_title, 23, 'Precio USD', f_table_header) #X
+        sheet.write(y_title, 24, 'Sub Total USD', f_table_header) #Y
+        sheet.write(y_title, 25, 'IVA USD', f_table_header) #Z
+        sheet.write(y_title, 26, 'Total USD', f_table_header) #AA 
+        sheet.write(y_title, 27, 'Pagado MXN', f_table_header) #AB
 
-        sheet.write(y_title, 12, 'Precio MXN', f_table_header)
-        sheet.write(y_title, 13, 'Sub Total MXN', f_table_header)
-        sheet.write(y_title, 14, 'IVA MXN', f_table_header)
-        sheet.write(y_title, 15, 'Total MXN', f_table_header)
-        sheet.write(y_title, 16, 'Precio USD', f_table_header)
-        sheet.write(y_title, 17, 'Sub Total USD', f_table_header)
-        sheet.write(y_title, 18, 'IVA USD', f_table_header)
-        sheet.write(y_title, 19, 'Total USD', f_table_header)
-        sheet.write(y_title, 20, 'Pagado MXN', f_table_header)
+        sheet.write(y_title, 28, 'Estatus de cotización', f_table_header) #AC
+        sheet.write(y_title, 29, 'Estatus operativo', f_table_header) #AD
 
-        sheet.write(y_title, 21, 'Estatus de cotización', f_table_header)
-        sheet.write(y_title, 22, 'Estatus operativo', f_table_header)
-
-        sheet.write(y_title, 23, 'Operador de Grúa', f_table_header)
-        sheet.write(y_title, 24, 'Horas Generadas Operador', f_table_header)
-        sheet.write(y_title, 25, 'Ayudante de Grúa', f_table_header)
-        sheet.write(y_title, 26, 'Horas Generadas Ayudante', f_table_header)
-        sheet.write(y_title, 27, 'Tercer Ayudante de Grúa', f_table_header)
-        sheet.write(y_title, 28, 'Horas Generadas Tercer Ayudante', f_table_header)
+        sheet.write(y_title, 30, 'Operador de Grúa', f_table_header) #AE
+        sheet.write(y_title, 31, 'Horas Generadas Operador', f_table_header) #AF
+        sheet.write(y_title, 32, 'Ayudante de Grúa', f_table_header) #AG
+        sheet.write(y_title, 33, 'Horas Generadas Ayudante', f_table_header) #AH
+        sheet.write(y_title, 34, 'Tercer Ayudante de Grúa', f_table_header) #AI
+        sheet.write(y_title, 35, 'Horas Generadas Tercer Ayudante', f_table_header) #AJ
 
         # Obtener los registros
         if data:
@@ -196,10 +217,34 @@ class projectTaskXlsx(models.AbstractModel):
                 # ayudantes = rec.tasks_ids[0].user_ids.filtered(lambda x : x.type_employee == 'support').mapped('name')
 
             if rec.tasks_ids:
-
+                tz = self.env.user.tz or self.env._context.get('tz') # Find Timezone from user or partner or employee
+                att_tz = timezone(tz or 'utc') 
+                
                 for task in rec.tasks_ids[0]:
 
                     for product in task.binnacle_ids:
+
+                        tz = self.env.user.tz or self.env._context.get('tz') # Find Timezone from user or partner or employee
+                        att_tz = timezone(tz or 'utc') # If no tz then return in UTC
+                        attendance_dt = datetime.strptime(str(product.date_init), DEFAULT_SERVER_DATETIME_FORMAT) #Input date
+                        att_tz_dt = pytz.utc.localize(attendance_dt)
+                        local_date_init = att_tz_dt.astimezone(att_tz) 
+
+                        tz = self.env.user.tz or self.env._context.get('tz') # Find Timezone from user or partner or employee
+                        att_tz = timezone(tz or 'utc') # If no tz then return in UTC
+                        attendance_dt = datetime.strptime(str(product.date_end), DEFAULT_SERVER_DATETIME_FORMAT) #Input date
+                        att_tz_dt = pytz.utc.localize(attendance_dt)
+                        local_date_end = att_tz_dt.astimezone(att_tz) 
+
+                        hour, minute = self.float_time_convert(product.hourmeter_init)
+                        hourmeter_init = '{0:02d}:{1:02d}'.format(hour, minute)
+
+                        hour, minute = self.float_time_convert(product.hourmeter_end)
+                        hourmeter_end = '{0:02d}:{1:02d}'.format(hour, minute)
+
+                        hour, minute = self.float_time_convert(product.delta_hourmeter)
+                        delta_hourmeter = '{0:02d}:{1:02d}'.format(hour, minute)
+                        
                         product_name = rec.tasks_ids[0].binnacle_ids.filtered(
                             lambda u: u.product_id.id == product.product_id.id)
                         order_line = rec.order_line.filtered(lambda u: u.product_id.id == product.product_id.id)
@@ -218,51 +263,55 @@ class projectTaskXlsx(models.AbstractModel):
 
                         sheet.write(y_title, 0, rec.name, f_table_cell_text)
                         sheet.write(y_title, 1, product.folio if product.folio else '', f_table_cell_text)
-                        sheet.write(y_title, 2,
-                                    rec.tasks_ids[0].x_studio_contrato if rec.tasks_ids[0].x_studio_contrato else ' ',
-                                    f_table_cell_text)
-                        sheet.write(y_title, 3, product.vehicle_id.x_studio_numero_economico if product else '',
-                                    f_table_cell_text)
-                        sheet.write(y_title, 4, rec.tasks_ids[0].name if rec.tasks_ids else '', f_table_cell_text)
-                        sheet.write(y_title, 5, rec.partner_id.name, f_table_cell_text)
-                        sheet.write(y_title, 6, rec.pozo, f_table_cell_text)
-                        sheet.write(y_title, 7, product.date_init.strftime('%d-%m-%Y %H:%M:%S'), f_table_cell_date)
-                        sheet.write(y_title, 8, product.date_end.strftime('%d-%m-%Y %H:%M:%S'), f_table_cell_date)
-                        sheet.write(y_title, 9, product.delta, f_table_cell_number)
-                        sheet.write(y_title, 10, product.product_id.name if product_name else ' ', f_table_cell_text)
-                        sheet.write(y_title, 11, 1, f_table_cell_number)
+                        sheet.write(y_title, 2, rec.tasks_ids[0].x_studio_contrato if rec.tasks_ids[0].x_studio_contrato else ' ',f_table_cell_text)
+                        sheet.write(y_title, 3, product.vehicle_id.x_studio_numero_economico if product else '', f_table_cell_text)
+                        
+                        sheet.write(y_title, 4, product.odometer_init if product.odometer_init else 0.00, f_table_cell_number)
+                        sheet.write(y_title, 5, product.odometer_end if product.odometer_end else 0.00, f_table_cell_number)
+                        sheet.write(y_title, 6, product.delta_odometer if product.delta_odometer else 0.00, f_table_cell_number)
+
+                        sheet.write(y_title, 7, hourmeter_init if product.hourmeter_init else "0:00", f_table_cell_text)
+                        sheet.write(y_title, 8, hourmeter_end if product.hourmeter_end else "0:00", f_table_cell_text)
+                        sheet.write(y_title, 9, delta_hourmeter if product.delta_hourmeter else "0:00", f_table_cell_text)
+
+                        sheet.write(y_title, 10, 0.00, f_table_cell_number)
+
+                        sheet.write(y_title, 11, rec.tasks_ids[0].name if rec.tasks_ids else '', f_table_cell_text)
+                        sheet.write(y_title, 12, rec.partner_id.name, f_table_cell_text)
+                        sheet.write(y_title, 13, rec.pozo, f_table_cell_text)
+                        sheet.write(y_title, 14, local_date_init.strftime('%d-%m-%Y %H:%M:%S'), f_table_cell_date)
+                        sheet.write(y_title, 15, local_date_end.strftime('%d-%m-%Y %H:%M:%S'), f_table_cell_date)
+                        sheet.write(y_title, 16, product.delta, f_table_cell_number)
+                        sheet.write(y_title, 17, product.product_id.name if product_name else ' ', f_table_cell_text)
+                        sheet.write(y_title, 18, 1, f_table_cell_number)
 
                         if order_line[0].currency_id.id == MXN:
-                            sheet.write(y_title, 12, order_line[0].price_unit if order_line else '', f_table_cell_money)
-                            sheet.write(y_title, 13, product_price_subtotal, f_table_cell_money)
-                            sheet.write(y_title, 14, product_price_iva, f_table_cell_money)
-                            sheet.write(y_title, 15, (product_price_subtotal + product_price_iva), f_table_cell_money)
-                            sheet.write(y_title, 16, 0.00, f_table_cell_money)
-                            sheet.write(y_title, 17, 0.00, f_table_cell_money)
-                            sheet.write(y_title, 18, 0.00, f_table_cell_money)
-                            sheet.write(y_title, 19, 0.00, f_table_cell_money)
+                            sheet.write(y_title, 19, order_line[0].price_unit if order_line else '', f_table_cell_money)
+                            sheet.write(y_title, 20, product_price_subtotal, f_table_cell_money)
+                            sheet.write(y_title, 21, product_price_iva, f_table_cell_money)
+                            sheet.write(y_title, 22, (product_price_subtotal + product_price_iva), f_table_cell_money)
+                            sheet.write(y_title, 23, 0.00, f_table_cell_money)
+                            sheet.write(y_title, 24, 0.00, f_table_cell_money)
+                            sheet.write(y_title, 25, 0.00, f_table_cell_money)
+                            sheet.write(y_title, 26, 0.00, f_table_cell_money)
                         elif order_line[0].currency_id.id == USD:
-                            sheet.write(y_title, 12, 0.00, f_table_cell_money)
-                            sheet.write(y_title, 13, 0.00, f_table_cell_money)
-                            sheet.write(y_title, 14, 0.00, f_table_cell_money)
-                            sheet.write(y_title, 15, 0.00, f_table_cell_money)
-                            sheet.write(y_title, 16, order_line[0].price_unit if order_line else '', f_table_cell_money)
-                            sheet.write(y_title, 17, product_price_subtotal, f_table_cell_money)
-                            sheet.write(y_title, 18, product_price_iva, f_table_cell_money)
-                            sheet.write(y_title, 19, (product_price_subtotal + product_price_iva), f_table_cell_money)
+                            sheet.write(y_title, 19, 0.00, f_table_cell_money)
+                            sheet.write(y_title, 20, 0.00, f_table_cell_money)
+                            sheet.write(y_title, 21, 0.00, f_table_cell_money)
+                            sheet.write(y_title, 22, 0.00, f_table_cell_money)
+                            sheet.write(y_title, 23, order_line[0].price_unit if order_line else '', f_table_cell_money)
+                            sheet.write(y_title, 24, product_price_subtotal, f_table_cell_money)
+                            sheet.write(y_title, 25, product_price_iva, f_table_cell_money)
+                            sheet.write(y_title, 26, (product_price_subtotal + product_price_iva), f_table_cell_money)
 
-                        sheet.write(y_title, 20, rec.get_paid_ammount(), f_table_cell_money)
-                        sheet.write(y_title, 21, payment_state, f_table_cell_text)
-                        sheet.write(y_title, 22, rec.tasks_ids[0].stage_id.name, f_table_cell_text)
-                        sheet.write(y_title, 23, product.gruero_id.name if product.gruero_id else ' ',
-                                    f_table_cell_text)
-                        sheet.write(y_title, 24, product.delta if product.gruero_id else 0.00, f_table_cell_number)
-                        sheet.write(y_title, 25, product.ayudante_id.name if product.ayudante_id else ' ',
-                                    f_table_cell_text)
-                        sheet.write(y_title, 26, product.delta if product.ayudante_id else 0.00, f_table_cell_number)
-                        sheet.write(y_title, 27, product.tercer_ayudante_id.name if product.tercer_ayudante_id else ' ',
-                                    f_table_cell_text)
-                        sheet.write(y_title, 28, product.delta if product.tercer_ayudante_id else 0.00,
-                                    f_table_cell_number)
+                        sheet.write(y_title, 27, rec.get_paid_ammount(), f_table_cell_money)
+                        sheet.write(y_title, 28, payment_state, f_table_cell_text)
+                        sheet.write(y_title, 29, rec.tasks_ids[0].stage_id.name, f_table_cell_text)
+                        sheet.write(y_title, 30, product.gruero_id.name if product.gruero_id else ' ',f_table_cell_text)
+                        sheet.write(y_title, 31, product.delta if product.gruero_id else 0.00, f_table_cell_number)
+                        sheet.write(y_title, 32, product.ayudante_id.name if product.ayudante_id else ' ',f_table_cell_text)
+                        sheet.write(y_title, 33, product.delta if product.ayudante_id else 0.00, f_table_cell_number)
+                        sheet.write(y_title, 34, product.tercer_ayudante_id.name if product.tercer_ayudante_id else ' ',f_table_cell_text)
+                        sheet.write(y_title, 35, product.delta if product.tercer_ayudante_id else 0.00,f_table_cell_number)
 
                         y_title += 1
