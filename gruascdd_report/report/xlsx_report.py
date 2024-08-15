@@ -33,6 +33,7 @@ class projectTaskXlsx(models.AbstractModel):
         MXN = 33
         cantidad = 1
         sheet = workbook.add_worksheet('')
+        group = '__export__.res_groups_133_72140141'
 
         # Formatos
         f_report_header = workbook.add_format({
@@ -86,7 +87,7 @@ class projectTaskXlsx(models.AbstractModel):
         sheet.set_column('D:D', 20)
         sheet.set_column('E:K', 10)
         
-        sheet.set_column('L:N', 35)
+        sheet.set_column('L:N', 50)
         sheet.set_column('O:P', 25)
         sheet.set_column('Q:Q', 15)
         sheet.set_column('R:R', 30)
@@ -128,25 +129,33 @@ class projectTaskXlsx(models.AbstractModel):
 
         sheet.write(y_title, 18, 'Cantidad de Grúas', f_table_header) #S
 
-        sheet.write(y_title, 19, 'Precio MXN', f_table_header) #T
-        sheet.write(y_title, 20, 'Sub Total MXN', f_table_header) #U
-        sheet.write(y_title, 21, 'IVA MXN', f_table_header) #V
-        sheet.write(y_title, 22, 'Total MXN', f_table_header) #W
-        sheet.write(y_title, 23, 'Precio USD', f_table_header) #X
-        sheet.write(y_title, 24, 'Sub Total USD', f_table_header) #Y
-        sheet.write(y_title, 25, 'IVA USD', f_table_header) #Z
-        sheet.write(y_title, 26, 'Total USD', f_table_header) #AA 
-        sheet.write(y_title, 27, 'Pagado MXN', f_table_header) #AB
-
-        sheet.write(y_title, 28, 'Estatus de cotización', f_table_header) #AC
-        sheet.write(y_title, 29, 'Estatus operativo', f_table_header) #AD
-
-        sheet.write(y_title, 30, 'Operador de Grúa', f_table_header) #AE
-        sheet.write(y_title, 31, 'Horas Generadas Operador', f_table_header) #AF
-        sheet.write(y_title, 32, 'Ayudante de Grúa', f_table_header) #AG
-        sheet.write(y_title, 33, 'Horas Generadas Ayudante', f_table_header) #AH
-        sheet.write(y_title, 34, 'Tercer Ayudante de Grúa', f_table_header) #AI
-        sheet.write(y_title, 35, 'Horas Generadas Tercer Ayudante', f_table_header) #AJ
+        if self.env.user.has_group (group):
+            sheet.write(y_title, 19, 'Precio MXN', f_table_header) #T
+            sheet.write(y_title, 20, 'Sub Total MXN', f_table_header) #U
+            sheet.write(y_title, 21, 'IVA MXN', f_table_header) #V
+            sheet.write(y_title, 22, 'Total MXN', f_table_header) #W
+            sheet.write(y_title, 23, 'Precio USD', f_table_header) #X
+            sheet.write(y_title, 24, 'Sub Total USD', f_table_header) #Y
+            sheet.write(y_title, 25, 'IVA USD', f_table_header) #Z
+            sheet.write(y_title, 26, 'Total USD', f_table_header) #AA 
+            sheet.write(y_title, 27, 'Pagado MXN', f_table_header) #AB
+            sheet.write(y_title, 28, 'Estatus de cotización', f_table_header) #AC
+            sheet.write(y_title, 29, 'Estatus operativo', f_table_header) #AD
+            sheet.write(y_title, 30, 'Operador de Grúa', f_table_header) #AE
+            sheet.write(y_title, 31, 'Horas Generadas Operador', f_table_header) #AF
+            sheet.write(y_title, 32, 'Ayudante de Grúa', f_table_header) #AG
+            sheet.write(y_title, 33, 'Horas Generadas Ayudante', f_table_header) #AH
+            sheet.write(y_title, 34, 'Tercer Ayudante de Grúa', f_table_header) #AI
+            sheet.write(y_title, 35, 'Horas Generadas Tercer Ayudante', f_table_header) #AJ
+        else:
+            sheet.write(y_title, 19, 'Estatus de cotización', f_table_header) #AC
+            sheet.write(y_title, 20, 'Estatus operativo', f_table_header) #AD
+            sheet.write(y_title, 21, 'Operador de Grúa', f_table_header) #AE
+            sheet.write(y_title, 22, 'Horas Generadas Operador', f_table_header) #AF
+            sheet.write(y_title, 23, 'Ayudante de Grúa', f_table_header) #AG
+            sheet.write(y_title, 24, 'Horas Generadas Ayudante', f_table_header) #AH
+            sheet.write(y_title, 25, 'Tercer Ayudante de Grúa', f_table_header) #AI
+            sheet.write(y_title, 26, 'Horas Generadas Tercer Ayudante', f_table_header) #AJ
 
         # Obtener los registros
         if data:
@@ -274,7 +283,7 @@ class projectTaskXlsx(models.AbstractModel):
                         sheet.write(y_title, 8, hourmeter_end if product.hourmeter_end else "0:00", f_table_cell_text)
                         sheet.write(y_title, 9, delta_hourmeter if product.delta_hourmeter else "0:00", f_table_cell_text)
 
-                        sheet.write(y_title, 10, 0.00, f_table_cell_number)
+                        sheet.write(y_title, 10, product.gasolina if product.gasolina else 0.00, f_table_cell_number)
 
                         sheet.write(y_title, 11, rec.tasks_ids[0].name if rec.tasks_ids else '', f_table_cell_text)
                         sheet.write(y_title, 12, rec.partner_id.name, f_table_cell_text)
@@ -285,33 +294,43 @@ class projectTaskXlsx(models.AbstractModel):
                         sheet.write(y_title, 17, product.product_id.name if product_name else ' ', f_table_cell_text)
                         sheet.write(y_title, 18, 1, f_table_cell_number)
 
-                        if order_line[0].currency_id.id == MXN:
-                            sheet.write(y_title, 19, order_line[0].price_unit if order_line else '', f_table_cell_money)
-                            sheet.write(y_title, 20, product_price_subtotal, f_table_cell_money)
-                            sheet.write(y_title, 21, product_price_iva, f_table_cell_money)
-                            sheet.write(y_title, 22, (product_price_subtotal + product_price_iva), f_table_cell_money)
-                            sheet.write(y_title, 23, 0.00, f_table_cell_money)
-                            sheet.write(y_title, 24, 0.00, f_table_cell_money)
-                            sheet.write(y_title, 25, 0.00, f_table_cell_money)
-                            sheet.write(y_title, 26, 0.00, f_table_cell_money)
-                        elif order_line[0].currency_id.id == USD:
-                            sheet.write(y_title, 19, 0.00, f_table_cell_money)
-                            sheet.write(y_title, 20, 0.00, f_table_cell_money)
-                            sheet.write(y_title, 21, 0.00, f_table_cell_money)
-                            sheet.write(y_title, 22, 0.00, f_table_cell_money)
-                            sheet.write(y_title, 23, order_line[0].price_unit if order_line else '', f_table_cell_money)
-                            sheet.write(y_title, 24, product_price_subtotal, f_table_cell_money)
-                            sheet.write(y_title, 25, product_price_iva, f_table_cell_money)
-                            sheet.write(y_title, 26, (product_price_subtotal + product_price_iva), f_table_cell_money)
+                        if self.env.user.has_group (group):
+                            if order_line[0].currency_id.id == MXN:
+                                sheet.write(y_title, 19, order_line[0].price_unit if order_line else '', f_table_cell_money)
+                                sheet.write(y_title, 20, product_price_subtotal, f_table_cell_money)
+                                sheet.write(y_title, 21, product_price_iva, f_table_cell_money)
+                                sheet.write(y_title, 22, (product_price_subtotal + product_price_iva), f_table_cell_money)
+                                sheet.write(y_title, 23, 0.00, f_table_cell_money)
+                                sheet.write(y_title, 24, 0.00, f_table_cell_money)
+                                sheet.write(y_title, 25, 0.00, f_table_cell_money)
+                                sheet.write(y_title, 26, 0.00, f_table_cell_money)
+                            elif order_line[0].currency_id.id == USD:
+                                sheet.write(y_title, 19, 0.00, f_table_cell_money)
+                                sheet.write(y_title, 20, 0.00, f_table_cell_money)
+                                sheet.write(y_title, 21, 0.00, f_table_cell_money)
+                                sheet.write(y_title, 22, 0.00, f_table_cell_money)
+                                sheet.write(y_title, 23, order_line[0].price_unit if order_line else '', f_table_cell_money)
+                                sheet.write(y_title, 24, product_price_subtotal, f_table_cell_money)
+                                sheet.write(y_title, 25, product_price_iva, f_table_cell_money)
+                                sheet.write(y_title, 26, (product_price_subtotal + product_price_iva), f_table_cell_money)
 
-                        sheet.write(y_title, 27, rec.get_paid_ammount(), f_table_cell_money)
-                        sheet.write(y_title, 28, payment_state, f_table_cell_text)
-                        sheet.write(y_title, 29, rec.tasks_ids[0].stage_id.name, f_table_cell_text)
-                        sheet.write(y_title, 30, product.gruero_id.name if product.gruero_id else ' ',f_table_cell_text)
-                        sheet.write(y_title, 31, product.delta if product.gruero_id else 0.00, f_table_cell_number)
-                        sheet.write(y_title, 32, product.ayudante_id.name if product.ayudante_id else ' ',f_table_cell_text)
-                        sheet.write(y_title, 33, product.delta if product.ayudante_id else 0.00, f_table_cell_number)
-                        sheet.write(y_title, 34, product.tercer_ayudante_id.name if product.tercer_ayudante_id else ' ',f_table_cell_text)
-                        sheet.write(y_title, 35, product.delta if product.tercer_ayudante_id else 0.00,f_table_cell_number)
+                            sheet.write(y_title, 27, rec.get_paid_ammount(), f_table_cell_money)
+                            sheet.write(y_title, 28, payment_state, f_table_cell_text)
+                            sheet.write(y_title, 29, rec.tasks_ids[0].stage_id.name, f_table_cell_text)
+                            sheet.write(y_title, 30, product.gruero_id.name if product.gruero_id else ' ',f_table_cell_text)
+                            sheet.write(y_title, 31, product.delta if product.gruero_id else 0.00, f_table_cell_number)
+                            sheet.write(y_title, 32, product.ayudante_id.name if product.ayudante_id else ' ',f_table_cell_text)
+                            sheet.write(y_title, 33, product.delta if product.ayudante_id else 0.00, f_table_cell_number)
+                            sheet.write(y_title, 34, product.tercer_ayudante_id.name if product.tercer_ayudante_id else ' ',f_table_cell_text)
+                            sheet.write(y_title, 35, product.delta if product.tercer_ayudante_id else 0.00,f_table_cell_number)
+                        else:
+                            sheet.write(y_title, 19, payment_state, f_table_cell_text)
+                            sheet.write(y_title, 20, rec.tasks_ids[0].stage_id.name, f_table_cell_text)
+                            sheet.write(y_title, 21, product.gruero_id.name if product.gruero_id else ' ',f_table_cell_text)
+                            sheet.write(y_title, 22, product.delta if product.gruero_id else 0.00, f_table_cell_number)
+                            sheet.write(y_title, 23, product.ayudante_id.name if product.ayudante_id else ' ',f_table_cell_text)
+                            sheet.write(y_title, 24, product.delta if product.ayudante_id else 0.00, f_table_cell_number)
+                            sheet.write(y_title, 25, product.tercer_ayudante_id.name if product.tercer_ayudante_id else ' ',f_table_cell_text)
+                            sheet.write(y_title, 26, product.delta if product.tercer_ayudante_id else 0.00,f_table_cell_number)
 
                         y_title += 1
