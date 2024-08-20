@@ -110,6 +110,7 @@ class ProjectBinnacle(models.Model):
 
     @api.depends("date_init", "date_end")
     def _compute_salto_secuencia(self):
+        self.ensure_one()
         bandera = False
         tz = self.env.user.tz # Find Timezone from user or partner or employee
         att_tz = timezone(tz or 'utc') 
