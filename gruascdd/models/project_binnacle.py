@@ -2,7 +2,6 @@ from odoo import fields, models, api
 from odoo.exceptions import ValidationError
 from datetime import datetime, timedelta
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
-from odoo.tools import pytz
 import logging
 import time
 from pytz import timezone
@@ -112,7 +111,7 @@ class ProjectBinnacle(models.Model):
     @api.depends("date_init", "date_end")
     def _compute_salto_secuencia(self):
         bandera = False
-        tz = self.env.user.tz or self.env._context.get('tz') # Find Timezone from user or partner or employee
+        tz = self.env.user.tz # Find Timezone from user or partner or employee
         att_tz = timezone(tz or 'utc') 
         
         binnacle = self.env['project.binnacle'].sudo().search([('parent_id_int', '=', self.parent_id_int)], order='date_init asc')
@@ -174,7 +173,7 @@ class ProjectBinnacle(models.Model):
     @api.model
     def create(self, vals):
         bandera = False
-        tz = self.env.user.tz or self.env._context.get('tz') # Find Timezone from user or partner or employee
+        tz = self.env.user.tz  # Find Timezone from user or partner or employee
         att_tz = timezone(tz or 'utc') 
         
         date_end = vals["date_end"] if "date_end" in vals else self.date_end
@@ -189,7 +188,7 @@ class ProjectBinnacle(models.Model):
         folio = vals["folio"] if "folio" in vals else self.folio
         parent_id_int = vals["parent_id_int"] if "parent_id_int" in vals else self.parent_id_int
         
-        tz = self.env.user.tz or self.env._context.get('tz') # Find Timezone from user or partner or employee
+        tz = self.env.user.tz  # Find Timezone from user or partner or employee
         att_tz = timezone(tz or 'utc') # If no tz then return in UTC
         attendance_dt = datetime.strptime(str(date_end), DEFAULT_SERVER_DATETIME_FORMAT) #Input date
         att_tz_dt = pytz.utc.localize(attendance_dt)
@@ -265,7 +264,7 @@ class ProjectBinnacle(models.Model):
     @api.model
     def write(self, vals):
         bandera = False
-        tz = self.env.user.tz or self.env._context.get('tz') # Find Timezone from user or partner or employee
+        tz = self.env.user.tz  # Find Timezone from user or partner or employee
         att_tz = timezone(tz or 'utc') 
         
         date_end = datetime.strptime(vals["date_end"], "%Y-%m-%d %H:%M:%S") if "date_end" in vals else self.date_end
@@ -283,7 +282,7 @@ class ProjectBinnacle(models.Model):
         odometer_id = vals["odometer_id"] if "odometer_id" in vals else self.odometer_id
         gas_id = vals["gas_id"] if "gas_id" in vals else self.gas_id           
             
-        tz = self.env.user.tz or self.env._context.get('tz') # Find Timezone from user or partner or employee
+        tz = self.env.user.tz  # Find Timezone from user or partner or employee
         att_tz = timezone(tz or 'utc') # If no tz then return in UTC
         attendance_dt = datetime.strptime(str(date_end), DEFAULT_SERVER_DATETIME_FORMAT) #Input date
         att_tz_dt = pytz.utc.localize(attendance_dt)
@@ -341,7 +340,7 @@ class ProjectBinnacle(models.Model):
         
         for line in self:
             
-            tz = self.env.user.tz or self.env._context.get('tz') # Find Timezone from user or partner or employee
+            tz = self.env.user.tz  # Find Timezone from user or partner or employee
             att_tz = timezone(tz or 'utc') # If no tz then return in UTC
             attendance_dt = datetime.strptime(str(line.date_end), DEFAULT_SERVER_DATETIME_FORMAT) #Input date
             att_tz_dt = pytz.utc.localize(attendance_dt)
