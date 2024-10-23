@@ -100,6 +100,7 @@ class projectTaskXlsx(models.AbstractModel):
         sheet.set_column('AH:AH', 16)
         sheet.set_column('AI:AI', 40)
         sheet.set_column('AJ:AJ', 16)
+        sheet.set_column('AK:AK', 40)
 
         y_title = 6  # 8
         sheet.write(y_title, 0, 'Trabajo #', f_table_header) #A
@@ -147,6 +148,7 @@ class projectTaskXlsx(models.AbstractModel):
             sheet.write(y_title, 33, 'Horas Generadas Ayudante', f_table_header) #AH
             sheet.write(y_title, 34, 'Tercer Ayudante de Grúa', f_table_header) #AI
             sheet.write(y_title, 35, 'Horas Generadas Tercer Ayudante', f_table_header) #AJ
+            sheet.write(y_title, 36, 'Comentarios', f_table_header) #AJ
         else:
             sheet.write(y_title, 19, 'Estatus de cotización', f_table_header) #AC
             sheet.write(y_title, 20, 'Estatus operativo', f_table_header) #AD
@@ -156,6 +158,7 @@ class projectTaskXlsx(models.AbstractModel):
             sheet.write(y_title, 24, 'Horas Generadas Ayudante', f_table_header) #AH
             sheet.write(y_title, 25, 'Tercer Ayudante de Grúa', f_table_header) #AI
             sheet.write(y_title, 26, 'Horas Generadas Tercer Ayudante', f_table_header) #AJ
+            sheet.write(y_title, 27, 'Comentarios', f_table_header) #AJ
 
         # Obtener los registros
         if data:
@@ -323,6 +326,7 @@ class projectTaskXlsx(models.AbstractModel):
                             sheet.write(y_title, 33, product.delta if product.ayudante_id else 0.00, f_table_cell_number)
                             sheet.write(y_title, 34, product.tercer_ayudante_id.name if product.tercer_ayudante_id else ' ',f_table_cell_text)
                             sheet.write(y_title, 35, product.delta if product.tercer_ayudante_id else 0.00,f_table_cell_number)
+                            sheet.write(y_title, 35, product.comment if product.comment else ' ',f_table_cell_text)
                         else:
                             sheet.write(y_title, 19, payment_state, f_table_cell_text)
                             sheet.write(y_title, 20, rec.tasks_ids[0].stage_id.name, f_table_cell_text)
@@ -332,5 +336,6 @@ class projectTaskXlsx(models.AbstractModel):
                             sheet.write(y_title, 24, product.delta if product.ayudante_id else 0.00, f_table_cell_number)
                             sheet.write(y_title, 25, product.tercer_ayudante_id.name if product.tercer_ayudante_id else ' ',f_table_cell_text)
                             sheet.write(y_title, 26, product.delta if product.tercer_ayudante_id else 0.00,f_table_cell_number)
+                            sheet.write(y_title, 27, product.comment if product.comment else ' ',f_table_cell_text)
 
                         y_title += 1
