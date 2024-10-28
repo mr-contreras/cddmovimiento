@@ -326,7 +326,7 @@ class projectTaskXlsx(models.AbstractModel):
                             sheet.write(y_title, 33, product.delta if product.ayudante_id else 0.00, f_table_cell_number)
                             sheet.write(y_title, 34, product.tercer_ayudante_id.name if product.tercer_ayudante_id else ' ',f_table_cell_text)
                             sheet.write(y_title, 35, product.delta if product.tercer_ayudante_id else 0.00,f_table_cell_number)
-                            sheet.write(y_title, 35, product.comment if product.comment else ' ',f_table_cell_text)
+                            sheet.write(y_title, 36, product.comment if product.comment else ' ',f_table_cell_text)
                         else:
                             sheet.write(y_title, 19, payment_state, f_table_cell_text)
                             sheet.write(y_title, 20, rec.tasks_ids[0].stage_id.name, f_table_cell_text)
