@@ -4,14 +4,13 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import pytz
 from odoo.exceptions import UserError
-from .tzlocal import get_localzone
 from odoo import tools
 
 class IncapacidadesNomina(models.Model):
     _name = 'incapacidades.nomina'
     _description = 'IncapacidadesNomina'
 
-    name = fields.Char("Name", required=True, copy=False, readonly=True, states={'draft': [('readonly', False)]}, index=True, default=lambda self: _('New'))
+    name = fields.Char("Name", required=True, copy=False, readonly=True, index=True, default=lambda self: _('New'))
     employee_id = fields.Many2one('hr.employee', string='Empleado')
     fecha = fields.Date('Fecha')
     
