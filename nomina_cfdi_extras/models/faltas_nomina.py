@@ -2,7 +2,6 @@
 from odoo import models, fields, _, api
 import pytz
 from odoo.exceptions import UserError
-from .tzlocal import get_localzone
 from datetime import datetime
 from odoo import tools
 
@@ -10,7 +9,7 @@ class FaltasNomina(models.Model):
     _name = 'faltas.nomina'
     _description = 'FaltasNomina'
 
-    name = fields.Char("Name", required=True, copy=False, readonly=True, states={'draft': [('readonly', False)]}, index=True, default=lambda self: _('New'))
+    name = fields.Char("Name", required=True, copy=False, readonly=True, index=True, default=lambda self: _('New'))
     employee_id = fields.Many2one('hr.employee', string='Empleado')
     fecha_inicio = fields.Date('Fecha inicio')
     fecha_fin = fields.Date('Fecha fin')

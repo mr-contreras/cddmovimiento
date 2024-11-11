@@ -9,7 +9,7 @@ class RetardoNomina(models.Model):
     _name = 'retardo.nomina'
     _description = 'RetardoNomina'
 
-    name = fields.Char("Name", required=True, copy=False, readonly=True, states={'draft': [('readonly', False)]}, index=True, default=lambda self: _('New'))
+    name = fields.Char("Name", required=True, copy=False, readonly=True, index=True, default=lambda self: _('New'))
     employee_id = fields.Many2one('hr.employee', string='Empleado')
     fecha = fields.Date('Fecha')
     state = fields.Selection([('draft', 'Borrador'), ('done', 'Hecho'), ('cancel', 'Cancelado')], string='State', default='draft')

@@ -7,7 +7,7 @@ class IncidenciasNomina(models.Model):
     _name = 'incidencias.nomina'
     _description = 'IncidenciasNomina'
 
-    name = fields.Char("Name", required=True, copy=False, readonly=True, states={'draft': [('readonly', False)]}, index=True, default=lambda self: _('New'))
+    name = fields.Char("Name", required=True, copy=False, readonly=True, index=True, default=lambda self: _('New'))
     tipo_de_incidencia = fields.Selection([('Cambio salario', 'Cambio salario'), ('Reingreso', 'Reingreso'), ('Baja','Baja'), ('Cambio reg. patronal','Cambio reg. patronal')], string='Tipo de incidencia')
     employee_id = fields.Many2one('hr.employee', string='Empleado')
     fecha = fields.Date('Fecha')
