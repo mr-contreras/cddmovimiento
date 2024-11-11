@@ -40,7 +40,7 @@ class ProjectTask(models.Model):
             for line in result.sale_order_id.order_line:
                 total_hours += line.product_uom_qty
 
-            result.planned_hours = total_hours * 2
+            result.allocated_hours = total_hours * 2
         return result
 
     def action_fsm_validate(self):

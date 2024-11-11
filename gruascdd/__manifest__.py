@@ -2,10 +2,10 @@
 {
     "name": "Módulo personalizado para CDD",
     "summary": "Modulo que automatiza multiples lineas de una orden de venta, en una sola tarea y un solo proyecto.",
-    "author": "Eligio Chan",
+    "author": "Eligio A. Chan",
     "website": "https://ezzquad.com",
     "category": "Sale",
-    "version": "2.5",
+    "version": "2.5.1",
     "license": "OPL-1",
 
     # any module necessary for this one to work correctly

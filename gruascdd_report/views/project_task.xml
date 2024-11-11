@@ -32,7 +32,7 @@
                             <field name="partner_id"/>
                         </span>
                     </t>
-                    <t t-else="record.email_from.raw_value"><span><field name="email_from"/></span></t>
+                    <t t-else="record.email_cc.raw_value"><span><field name="email_cc"/></span></t>
                     <t t-if="!record.is_private.raw_value">
                         <span invisible="context.get('default_project_id', False)"><br/><field name="project_id" required="1"/></span>
                     </t>
